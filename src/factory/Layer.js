@@ -209,7 +209,7 @@ export const LayerFactory = {
       source: new XyzSource({
         url: lConf.url,
         attributions: lConf.attributions,
-        tileGrid: lConf.tileGrid,
+        // tileGrid: lConf.tileGrid,
         projection: lConf.projection
       })
     });
