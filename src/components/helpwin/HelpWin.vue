@@ -1,7 +1,7 @@
 <template>
 <!--remove <v-toolbar-side> -->
   <v-card class="wgu-helpwin">
-    <v-toolbar :color="color" class="" dark>
+    <v-toolbar :color="color" dark>
       <v-icon>{{ icon }}</v-icon>
       <v-toolbar-title>{{ title }}</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -11,16 +11,13 @@
     <v-card-title primary-title>
       <div>
         <h3 class="headline mb-0">{{ headline }}</h3>
-        <div class="">
-          <span v-html="content"></span>
-        </div>
       </div>
     </v-card-title>
-
-    <v-card-actions>
-      <a class="info-link red--text darken3"
-        :href="infoLink" target="_blank">{{ infoLinkText }}</a>
-    </v-card-actions>
+    <v-card-text>
+      <div class="text--primary">
+        Diese Anwendung stellt die auf der Webseite von <a href="http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/">Mutterstadt</a> aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf einen Punkt wird eine kurze Beschreibung eingeblendet. 
+      </div>
+    </v-card-text>
   </v-card>
 
 </template>
@@ -30,11 +27,8 @@
     props: {
       color: {type: String, required: false, default: 'red darken-3'},
       icon: {type: String, required: false, default: 'help'},
-      title: {type: String, required: false, default: 'About'},
-      headline: {type: String, required: false, default: 'About Wegue'},
-      content: {type: String, required: false, default: '<h3>WebGIS with OpenLayers and Vue.js</h3> Template and re-usable components for webmapping applications with OpenLayers and Vue.js'},
-      infoLink: {type: String, required: false, default: 'https://github.com/meggsimum/wegue'},
-      infoLinkText: {type: String, required: false, default: 'More info'}
+      title: {type: String, required: false, default: 'Info'},
+      headline: {type: String, required: false, default: 'Gewerbe in Mutterstadt'}
     },
     data () {
       return {
@@ -50,5 +44,4 @@
 </script>
 
 <style>
-
 </style>

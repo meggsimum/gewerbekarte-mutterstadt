@@ -1,0 +1,71 @@
+{
+
+  "title": "Mutterstadt Gewerbe",
+
+  "baseColor": "#89A5D8",
+
+  "logo": "./static/img/meggsimum_logo.png",
+  "logoWidth": "100",
+  "logoHeight": "100",
+
+  "footerTextLeft": "Powered by <a href='https://meggsimum.de/wegue/' target='_blank'>Wegue WebGIS</a>",
+  "footerTextRight": "meggsimum",
+  "showCopyrightYear": true,
+
+  "mapZoom": 15,
+  "mapCenter": [930060.7,6350204.7],
+
+  "mapLayers": [
+
+    {
+      "type": "VECTOR",
+      "lid": "gewerbe",
+      "name": "Gewerbe Mutterstadt",
+      "url": "./static/data/gewerbe.geojson",
+      "format": "GeoJSON",
+      "visible": true,
+      "selectable": false,
+      "style": {
+        "radius": 4,
+        "strokeColor": "purple",
+        "strokeWidth": 2,
+        "fillColor": "rgba(155,153,51,0.5)",
+        "label": {
+          "attribute": "title",
+          "minResolution": 4.0,
+          "outlineColor": "white",
+          "outlineWidth": 2,
+          "fillColor": "black",
+          "offsetX": 0,
+          "offsetY": 15,
+          "align": "center"
+        }
+      },
+      "attributions": "Gewerbedaten von <a href='http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/'>mutterstadt.de</a>"
+    },
+    {
+      "type": "XYZ",
+      "name": "Carto Positron",
+      "url": "http://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+      "lid": "positron",
+      "displayInLayerList": true,
+      "visible": true,
+      "attributions": "© <a href='https://carto.com/attribution/' target='_blank'>CARTO</a> | <a href='https://openstreetmap.org/copyright' target='_blank'>© OpenStreetMap</a>-contributors | "
+    }
+  ],
+
+  "modules": {
+    "wgu-zoomtomaxextent": {
+      "target": "toolbar",
+      "darkLayout": true
+    },
+    "wgu-geolocator": {
+      "target": "toolbar",
+      "darkLayout": true
+    },
+    "wgu-helpwin": {
+      "target": "toolbar",
+      "darkLayout": true
+    }
+  }
+}
