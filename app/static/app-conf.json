@@ -24,7 +24,7 @@
       "url": "./static/data/gewerbe.geojson",
       "format": "GeoJSON",
       "visible": true,
-      "selectable": false,
+      "selectable": true,
       "style": {
         "radius": 4,
         "strokeColor": "purple",

@@ -27,6 +27,7 @@ import { LayerFactory } from '../../factory/Layer.js';
 import ColorUtil from '../../util/Color';
 import LayerUtil from '../../util/Layer';
 import PermalinkController from './PermalinkController';
+import {Circle, Stroke, Style, Fill} from 'ol/style';
 
 export default {
   name: 'wgu-map',
@@ -164,7 +165,25 @@ export default {
         // if layer is selectable register a select interaction
         if (lConf.selectable) {
           const selectClick = new SelectInteraction({
-            layers: [layer]
+            layers: [layer],
+            hitTolerance: 5,
+            style: new Style({
+              image: new Circle({
+                radius: 15,
+                fill: new Fill(
+                  {
+                    // color: Vue.prototype.$appConfig.baseColor
+                    color: 'rgb(255, 255, 0, 0.2)'
+                  }
+                ),
+                stroke: new Stroke(
+                  {
+                    color: 'black',
+                    width: 4
+                  }
+                )
+              })
+            })
           });
           // forward an event if feature selection changes
           selectClick.on('select', function (evt) {
