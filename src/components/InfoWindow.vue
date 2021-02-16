@@ -41,7 +41,7 @@ export default {
 <style>
 
   .wgu-infowindow {
-    padding: 75px 5px 5px 5px
+    padding: 75px 5px 5px 5px;
   }
 
   .wgu-infowindow .info-card {
