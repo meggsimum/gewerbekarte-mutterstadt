@@ -164,26 +164,44 @@ export default {
 
         // if layer is selectable register a select interaction
         if (lConf.selectable) {
+          // define style for selection
+          const selectStyle = new Style({
+            image: new Circle({
+              radius: 20,
+              fill: new Fill(
+                {
+                  // TODO: make configurable
+                  // color: Vue.prototype.$appConfig.baseColor
+                  color: 'rgb(255, 255, 0, 0.1)'
+                }
+              ),
+              stroke: new Stroke(
+                {
+                  color: 'black',
+                  width: 4
+                }
+              )
+            })
+          });
+
+          // we create a combination of the existing style and the
+          // selection style
           const selectClick = new SelectInteraction({
             layers: [layer],
             hitTolerance: 5,
-            style: new Style({
-              image: new Circle({
-                radius: 15,
-                fill: new Fill(
-                  {
-                    // color: Vue.prototype.$appConfig.baseColor
-                    color: 'rgb(255, 255, 0, 0.2)'
-                  }
-                ),
-                stroke: new Stroke(
-                  {
-                    color: 'black',
-                    width: 4
-                  }
-                )
-              })
-            })
+            style: function (feature, resolution) {
+              const lid = lConf.lid;
+              // we need to call layer again in case it has
+              // changed since initialisation
+              const layer = LayerUtil.getLayerByLid(lid, me.map);
+              if (!layer) {
+                return;
+              }
+              // TODO: check if this a function or a static object
+              const layerStyleFunction = layer.getStyle();
+              // we return an array of the selection style and the features style
+              return [selectStyle, layerStyleFunction(feature, resolution)]
+            }
           });
           // forward an event if feature selection changes
           selectClick.on('select', function (evt) {
