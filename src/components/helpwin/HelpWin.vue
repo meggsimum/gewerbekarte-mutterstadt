@@ -15,7 +15,13 @@
     </v-card-title>
     <v-card-text>
       <div class="text--primary">
-        Diese Anwendung stellt die auf der Webseite von <a href="http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/">Mutterstadt</a> aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf einen Punkt wird eine kurze Beschreibung eingeblendet. 
+        Diese Anwendung stellt die auf der Webseite von <a href="http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/">Mutterstadt</a> aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf einen Punkt wird eine Beschreibung eingeblendet.
+        <br>
+        <br>
+        Es handelt sich um <b>keine</b> offizielle Anwendung der Gemeinde Mutterstadt. 
+        <br>
+        <br>
+        Es besteht keine Gewähr für Korrektheit oder Vollständigkeit.
       </div>
     </v-card-text>
   </v-card>
