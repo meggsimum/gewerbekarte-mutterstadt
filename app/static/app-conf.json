@@ -25,22 +25,6 @@
       "format": "GeoJSON",
       "visible": true,
       "selectable": true,
-      "style": {
-        "radius": 4,
-        "strokeColor": "purple",
-        "strokeWidth": 2,
-        "fillColor": "rgba(155,153,51,0.5)",
-        "label": {
-          "attribute": "title",
-          "minResolution": 4.0,
-          "outlineColor": "white",
-          "outlineWidth": 2,
-          "fillColor": "black",
-          "offsetX": 0,
-          "offsetY": 15,
-          "align": "center"
-        }
-      },
       "attributions": "Gewerbedaten von <a href='http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/'>mutterstadt.de</a>"
     },
     {
