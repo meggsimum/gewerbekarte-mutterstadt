@@ -28,11 +28,19 @@
     methods: {
       onMapBound () {
         const me = this;
-        const poiLayer = LayerUtil.getLayerByLid('gewerbe', me.map);
-        if (!poiLayer) {
-          return;
-        }
-        poiLayer.setStyle(me.poiStyle);
+
+        me.addCustomPoiStyle();
+        me.createLabelLayer();
+      },
+
+      /**
+       * Add a label layer that appears on hovering.
+       *
+       * We cannot use the original layer, because it also uses a
+       * TextStyle for the symbology.
+       */
+      createLabelLayer: function () {
+        const me = this;
 
         const labelLayer = new VectorLayer({
           name: 'LabelLayer',
@@ -73,6 +81,24 @@
           );
         });
       },
+
+      /**
+       * Replaces the original style of the POI layer
+       * with a custom style.
+       */
+      addCustomPoiStyle: function () {
+        const me = this;
+
+        const poiLayer = LayerUtil.getLayerByLid('gewerbe', me.map);
+        if (!poiLayer) {
+          return;
+        }
+        poiLayer.setStyle(me.poiStyle);
+      },
+
+      /**
+       * The style for the POI layer.
+       */
       poiStyle (feature, resolution) {
         // styles: https://material.io/resources/icons/?style=baseline
         const symbols = {

@@ -13,6 +13,9 @@
 </template>
 
 <script>
+/**
+ * Card that shows information about a POI.
+ */
 
 import { Mapable } from '../../src/mixins/Mapable';
 import { WguEventBus } from '../../src/WguEventBus';
@@ -32,7 +35,10 @@ export default {
   mounted () {
     var me = this;
 
-    WguEventBus.$on('wsr-feature-click', function (feature) {
+    // react on map click event
+    // if feature is found this compontent will
+    // be made visible
+    WguEventBus.$on('mts-feature-click', function (feature) {
       if (feature) {
         me.showMe = true;
         me.unternehmen = feature.get('unternehmen_html');
@@ -44,9 +50,12 @@ export default {
     )
   },
   methods: {
+    /**
+     * Create a html snippet from the features properties.
+     */
     createTextHtml () {
-      if (!this.unternehmen || !this.branche) {
-        return 'Default Text'
+      if (!this.unternehmen) {
+        return ''
       }
       if (!this.branche) {
         return this.unternehmen
@@ -54,7 +63,7 @@ export default {
       return this.unternehmen + '</br></br>' + '<b>Branche</b></br>' + this.branche;
     },
     /**
-     * This function is executed, after the map is bound (see mixins/Mapable)
+     * Add click event to map.
      */
     onMapBound () {
       var me = this;
@@ -68,7 +77,7 @@ export default {
             hitTolerance: 5
           });
 
-        WguEventBus.$emit('wsr-feature-click', feature);
+        WguEventBus.$emit('mts-feature-click', feature);
       });
     }
   }
