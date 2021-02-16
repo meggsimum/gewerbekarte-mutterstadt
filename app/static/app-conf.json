@@ -9,7 +9,7 @@
   "logoHeight": "100",
 
   "footerTextLeft": "Powered by <a href='https://meggsimum.de/wegue/' target='_blank'>Wegue WebGIS</a>",
-  "footerTextRight": "meggsimum",
+  "footerTextRight": "<a href='https://meggsimum.de/impressum/' target='_blank'>meggsimum</a>",
   "showCopyrightYear": true,
 
   "mapZoom": 14,
