@@ -170,14 +170,13 @@ export default {
               radius: 20,
               fill: new Fill(
                 {
-                  // TODO: make configurable
-                  // color: Vue.prototype.$appConfig.baseColor
-                  color: 'rgb(255, 255, 0, 0.1)'
+                  // TODO: currently white, make configurable
+                  color: 'rgb(255, 255, 255, 0.3)'
                 }
               ),
               stroke: new Stroke(
                 {
-                  color: 'black',
+                  color: Vue.prototype.$appConfig.baseColor,
                   width: 4
                 }
               )

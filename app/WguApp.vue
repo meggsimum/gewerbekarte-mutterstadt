@@ -14,7 +14,7 @@
   import PoiInfo from './components/PoiInfo';
   import { Mapable } from '../src/mixins/Mapable';
   import LayerUtil from '../src/util/Layer';
-  import {Style, Fill, Text, Stroke} from 'ol/style';
+  import {Style, Fill, Text, Stroke, Icon} from 'ol/style';
   import VectorLayer from 'ol/layer/Vector'
   import VectorSource from 'ol/source/Vector'
 
@@ -123,12 +123,14 @@
             color: '#7fc97f'
           },
           dienstleistungen: {
-            icon: 'support_agent',
-            color: '#386cb0'
+            isSvg: true,
+            src: './static/icon/handshake.svg',
+            scale: 3.5
           },
           elektronik_computer: {
-            icon: 'support_agent',
-            color: '#386cb0'
+            isSvg: true,
+            src: './static/icon/handshake.svg',
+            scale: 3.5
           },
           einzelhandel: {
             icon: 'shopping_basket',
@@ -140,20 +142,33 @@
           },
           postdienste: {
             icon: 'email',
-            color: '#f0027f'
+            color: '#FCE94F'
           }
         };
         const category = feature.get('kategorie');
 
-        let style = new Style({
-          text: new Text({
-            text: symbols[category].icon,
-            font: 'normal 30px Material Icons',
-            fill: new Fill({
-              color: symbols[category].color
+        // styles can be provided as "material design" font icon
+        // or as SVG icon
+        let style;
+        if (symbols[category].isSvg) {
+          style = new Style({
+            image: new Icon(({
+              src: symbols[category].src,
+              scale: symbols[category].scale
+            }))
+          });
+          console.log(style);
+        } else {
+          style = new Style({
+            text: new Text({
+              text: symbols[category].icon,
+              font: 'normal 30px Material Icons',
+              fill: new Fill({
+                color: symbols[category].color
+              })
             })
-          })
-        });
+          });
+        }
 
         return style;
       }
