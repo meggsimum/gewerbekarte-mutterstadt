@@ -157,7 +157,6 @@
               scale: symbols[category].scale
             }))
           });
-          console.log(style);
         } else {
           style = new Style({
             text: new Text({

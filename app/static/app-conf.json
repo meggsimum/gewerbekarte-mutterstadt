@@ -30,11 +30,11 @@
     {
       "type": "XYZ",
       "name": "Carto Positron",
-      "url": "http://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+      "url": "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
       "lid": "positron",
       "displayInLayerList": true,
       "visible": true,
-      "attributions": "© <a href='https://carto.com/attribution/' target='_blank'>CARTO</a> | <a href='https://openstreetmap.org/copyright' target='_blank'>© OpenStreetMap</a>-contributors | "
+      "attributions": "Maps: © <a href='https://carto.com/attribution/' target='_blank'>CARTO</a> | <a href='https://openstreetmap.org/copyright' target='_blank'>© OpenStreetMap</a>-contributors | "
     }
   ],
 
