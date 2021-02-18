@@ -15,13 +15,17 @@
     </v-card-title>
     <v-card-text>
       <div class="text--primary">
-        Diese Anwendung stellt die auf der Webseite von <a href="http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/">Mutterstadt</a> aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf einen Punkt wird eine Beschreibung eingeblendet.
+        Diese Anwendung stellt die auf der Webseite von <a href="http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/">Mutterstadt</a>
+        aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf ein Gewerbesymbol wird eine Beschreibung eingeblendet.
         <br>
         <br>
-        Es handelt sich um <b>keine</b> offizielle Anwendung der Gemeinde Mutterstadt. 
+        Es handelt sich <b>nicht</b> um eine offizielle Anwendung der Gemeinde Mutterstadt.
         <br>
         <br>
         Es besteht keine Gewähr für Korrektheit oder Vollständigkeit.
+        <br>
+        <br>
+        Bei Fragen oder Anregungen kontaktieren Sie uns <a href="mailto:info@meggsimum.de?subject=Gewerbekarte Mutterstadt">per Mail</a>.
       </div>
     </v-card-text>
   </v-card>
