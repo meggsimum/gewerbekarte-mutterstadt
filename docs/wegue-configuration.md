@@ -8,7 +8,8 @@ This describes the Wegue application configuration, which is modelled as JSON do
 
 | Property           | Meaning   | Example |
 |--------------------|:---------:|---------|
-| title              | Title shown in the top toolbar | `"title": "A Wegue WebGIS App"` |
+| title              | Title shown in the top toolbar of the application | `"title": "A Wegue WebGIS App"` |
+| browserTitle       | HTML document title that is shown in the browser title bar or a browser page tab | `"browserTitle": "Wegue Demo App"` |
 | baseColor          | Main colour of the UI elements | `"baseColor": "red darken-3"` or `"baseColor": "#ff3388"` |
 | logo               | URL to an image shown as application logo | ` "logo": "https://dummyimage.com/100x100/aaa/fff&text=Wegue"`
 | logoWidth          | Width of the application logo defined in `logo` | `"logoWidth": "200"`|
@@ -118,11 +119,13 @@ Example configurations can be found in the `app-starter/static` directory. Below
 {
 
   "title": "Vue.js / OpenLayers WebGIS",
+  "browserTitle": "Wegue Demo App",
 
   "baseColor": "red darken-3",
 
   "logo": "https://dummyimage.com/100x100/aaa/fff&text=Wegue",
-  "logoSize": "100",
+  "logoWidth": "100",
+  "logoHeight": "100",
 
   "footerTextLeft": "Powered by <a href='https://meggsimum.de/wegue/' target='_blank'>Wegue WebGIS</a>",
   "footerTextRight": "meggsimum",
@@ -130,13 +133,21 @@ Example configurations can be found in the `app-starter/static` directory. Below
 
   "mapZoom": 2,
   "mapCenter": [0, 0],
-
   "mapGeodataDragDop": {
     "formats": ["GeoJSON", "KML"],
     "zoomToData": true,
     "replaceData": true,
     "displayInLayerList": true,
     "layerName": "Uploaded Data"
+  },
+
+  "permalink": {
+    "location": "hash",
+    "layers": true,
+    "extent": false,
+    "projection": "EPSG:4326",
+    "paramPrefix": "",
+    "history": true
   },
 
   "mapLayers": [
@@ -155,9 +166,62 @@ Example configurations can be found in the `app-starter/static` directory. Below
         "radius": 4,
         "strokeColor": "purple",
         "strokeWidth": 2,
-        "fillColor": "rgba(155,153,51,0.5)"
-      }
+        "fillColor": "rgba(155,153,51,0.5)",
+        "label": {
+          "attribute": "name",
+          "minResolution": 4.0,
+          "outlineColor": "white",
+          "outlineWidth": 2,
+          "fillColor": "black",
+          "offsetX": 0,
+          "offsetY": 15,
+          "align": "center"
+        }
+      },
+      "columnMapping": {
+        "name": "Name",
+        "email": "Email",
+        "website": "Website"
+      },
+      "selectStyle": {
+        "radius": 10,
+        "strokeColor": "gray",
+        "strokeWidth": 5,
+        "fillColor": "rgb(255, 255, 0, 0.2)"
+      },
+      "doAppendSelectStyle": true
     },
+    {
+      "type": "WFS",
+      "lid": "gas-wfs",
+      "name": "Gas Stations WFS",
+      "url": "https://ows-demo.terrestris.de/geoserver/osm/wfs",
+      "typeName": "osm:osm-fuel",
+      "version": "2.0.0",
+      "maxFeatures": 50,
+      "formatConfig": {
+      },
+      "format": "GML3",
+      "loadOnlyVisible": true,
+      "visible": false,
+      "selectable": true,
+      "style": {
+        "textIcon": "local_gas_station",
+        "font": "normal 30px Material Icons",
+        "fillColor": "blue"
+      },
+      "attributions": "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors.",
+      "columnMapping": {
+        "name": "Name"
+      },
+      "selectStyle": {
+        "textIcon": "star",
+        "font": "normal 30px Material Icons",
+        "fillColor": "black"
+      },
+      "doAppendSelectStyle": false
+    },
+
     {
       "type": "VECTOR",
       "lid": "earthquakes",
@@ -178,6 +242,12 @@ Example configurations can be found in the `app-starter/static` directory. Below
         "anchor": [0.5, 37],
         "anchorXUnits": "fraction",
         "anchorYUnits": "pixels"
+      },
+      "selectStyle": {
+        "radius": 10,
+        "strokeColor": "gray",
+        "strokeWidth": 5,
+        "fillColor": "rgb(255, 255, 0, 0.2)"
       }
     },
     {
@@ -215,7 +285,7 @@ Example configurations can be found in the `app-starter/static` directory. Below
       "url": "https://tile.opentopomap.org/{z}/{x}/{y}.png",
       "attributions": "Map data: <a href=\"https://openstreetmap.org/copyright\">©OpenStreetMap</a>-contributors, SRTM | Map representation (Kartendarstellung): © <a href=\"http://opentopomap.org/\">OpenTopoMap</a> (<a href=\"https://creativecommons.org/licenses/by-sa/3.0/\">CC-BY-SA</a>)",
       "lid": "opentopomap",
-      "displayInLayerList": true,
+      "isBaseLayer": true,
       "visible": false
     },
 
@@ -223,9 +293,8 @@ Example configurations can be found in the `app-starter/static` directory. Below
       "type": "OSM",
       "lid": "osm-bg",
       "name": "OSM",
-      "isBaseLayer": false,
-      "visible": true,
-      "displayInLayerList": true
+      "isBaseLayer": true,
+      "visible": true
     }
 
   ],
@@ -233,12 +302,16 @@ Example configurations can be found in the `app-starter/static` directory. Below
   "modules": {
     "wgu-layerlist": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "layers",
+      "darkLayout": true,
       "draggable": false
     },
     "wgu-measuretool": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "photo_size_select_small",
+      "darkLayout": true,
       "draggable": false,
       "strokeColor": "#c62828",
       "fillColor": "rgba(198,40,40,0.2)",
@@ -249,7 +322,9 @@ Example configurations can be found in the `app-starter/static` directory. Below
     },
     "wgu-infoclick": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "info",
+      "darkLayout": true,
       "draggable": false,
       "initPos": {
         "left": 8,
@@ -277,10 +352,31 @@ Example configurations can be found in the `app-starter/static` directory. Below
     },
     "wgu-helpwin": {
       "target": "toolbar",
+      "win": "floating",
+      "icon": "help",
+      "darkLayout": true,
+      "title": "About",
+      "textTitle": "About Wegue",
+      "htmlContent": "<b>WebGIS with OpenLayers and Vue.js</b> Template and re-usable components for webmapping applications with OpenLayers and Vue.js",
+      "infoLinkText": "More Info",
+      "infoLinkUrl": "http://wegue.org/"
+    },
+    "wgu-geolocator": {
+      "target": "toolbar",
       "darkLayout": true
+    },
+    "wgu-attributetable": {
+      "target": "menu",
+      "win": "floating",
+      "icon": "table_chart",
+      "darkLayout": true,
+      "syncTableMapSelection": true
     }
   }
 }
 ```
 
-A more elaborate example, named [app-conf-projected.json](https://github.com/meggsimum/wegue/blob/master/app-starter/static/app-conf-projected.json) with custom Projections and Tilegrids can be found in the app-starter directory.
+More elaborate examples can be found in the app-starter directory.
+* [app-conf-projected.json](https://github.com/meggsimum/wegue/blob/master/app-starter/static/app-conf-projected.json) demonstrates custom Projections and Tilegrids.
+* [app-conf-minimal.json](https://github.com/meggsimum/wegue/blob/master/app-starter/static/app-conf-minimal.json) is a minimal setup for a Wegue application.
+* [app-conf-sidebar.json](https://github.com/meggsimum/wegue/blob/master/app-starter/static/app-conf-sidebar.json) is an example for displaying module content inside a sidebar.

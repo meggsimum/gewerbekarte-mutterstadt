@@ -92,6 +92,8 @@ export const LayerFactory = {
     const layer = new TileLayer({
       name: lConf.name,
       lid: lConf.lid,
+      isBaseLayer: lConf.isBaseLayer,
+      previewImage: lConf.previewImage,
       displayInLayerList: lConf.displayInLayerList,
       extent: lConf.extent,
       visible: lConf.visible,
@@ -182,12 +184,17 @@ export const LayerFactory = {
     var vector = new VectorLayer({
       name: lConf.name,
       lid: lConf.lid,
+      isBaseLayer: lConf.isBaseLayer,
+      previewImage: lConf.previewImage,
       displayInLayerList: lConf.displayInLayerList,
       extent: lConf.extent,
       visible: lConf.visible,
       opacity: lConf.opacity,
       source: vectorSource,
-      style: OlStyleFactory.getInstance(lConf.style)
+      style: OlStyleFactory.getInstance(lConf.style),
+      columnMapping: lConf.columnMapping,
+      hoverable: lConf.hoverable,
+      hoverAttribute: lConf.hoverAttribute
     });
 
     return vector;
@@ -203,6 +210,8 @@ export const LayerFactory = {
     const xyzLayer = new TileLayer({
       name: lConf.name,
       lid: lConf.lid,
+      isBaseLayer: lConf.isBaseLayer,
+      previewImage: lConf.previewImage,
       displayInLayerList: lConf.displayInLayerList,
       visible: lConf.visible,
       opacity: lConf.opacity,
@@ -227,6 +236,8 @@ export const LayerFactory = {
     const layer = new TileLayer({
       name: lConf.name,
       lid: lConf.lid,
+      isBaseLayer: lConf.isBaseLayer,
+      previewImage: lConf.previewImage,
       displayInLayerList: lConf.displayInLayerList,
       visible: lConf.visible,
       opacity: lConf.opacity,
@@ -246,6 +257,8 @@ export const LayerFactory = {
     const vectorLayer = new VectorLayer({
       name: lConf.name,
       lid: lConf.lid,
+      isBaseLayer: lConf.isBaseLayer,
+      previewImage: lConf.previewImage,
       displayInLayerList: lConf.displayInLayerList,
       extent: lConf.extent,
       visible: lConf.visible,
@@ -257,7 +270,8 @@ export const LayerFactory = {
       }),
       style: OlStyleFactory.getInstance(lConf.style),
       hoverable: lConf.hoverable,
-      hoverAttribute: lConf.hoverAttribute
+      hoverAttribute: lConf.hoverAttribute,
+      columnMapping: lConf.columnMapping
     });
 
     return vectorLayer;
@@ -273,6 +287,8 @@ export const LayerFactory = {
     const vtLayer = new VectorTileLayer({
       name: lConf.name,
       lid: lConf.lid,
+      isBaseLayer: lConf.isBaseLayer,
+      previewImage: lConf.previewImage,
       displayInLayerList: lConf.displayInLayerList,
       visible: lConf.visible,
       opacity: lConf.opacity,

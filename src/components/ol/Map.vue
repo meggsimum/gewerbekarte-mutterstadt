@@ -7,7 +7,6 @@ import Map from 'ol/Map'
 import View from 'ol/View'
 import Attribution from 'ol/control/Attribution';
 import Zoom from 'ol/control/Zoom';
-import SelectInteraction from 'ol/interaction/Select';
 import {
   DragAndDrop,
   defaults as defaultInteractions
@@ -29,6 +28,7 @@ import ColorUtil from '../../util/Color';
 import LayerUtil from '../../util/Layer';
 import PermalinkController from './PermalinkController';
 import {Circle, Stroke, Style, Fill} from 'ol/style';
+import MapInteractionUtil from '../../util/MapInteraction';
 
 export default {
   name: 'wgu-map',
@@ -78,6 +78,14 @@ export default {
       // initialize map hover functionality
       me.setupMapHover();
     }, 200);
+  },
+  destroyed () {
+    if (this.permalinkController) {
+      this.permalinkController.tearDown();
+      this.permalinkController = undefined;
+    }
+    // Send the event 'ol-map-unmounted' with the OL map as payload
+    WguEventBus.$emit('ol-map-unmounted', this.map);
   },
   created () {
     // make map rotateable according to property
@@ -159,7 +167,9 @@ export default {
       const mapLayersConfig = appConfig.mapLayers || [];
       mapLayersConfig.reverse().forEach(function (lConf) {
         // Some Layers may require a TileGrid object
-        lConf.tileGrid = lConf.tileGridRef ? me.tileGrids[lConf.tileGridRef] : null;
+        // Remarks: Passing null instead of undefined as parameters into the
+        //  constructor of OpenLayers sources overwrites OpenLayers defaults.
+        lConf.tileGrid = lConf.tileGridRef ? me.tileGrids[lConf.tileGridRef] : undefined;
 
         let layer = LayerFactory.getInstance(lConf, me.map);
         layers.push(layer);
@@ -285,6 +295,8 @@ export default {
       // wrap the tooltip span in a OL overlay and add it to map
       me.overlay = new Overlay({
         element: overlayEl,
+        stopEvent: false,
+        className: 'wgu-hover-ol-overlay',
         autoPan: true,
         autoPanAnimation: {
           duration: 250
@@ -409,15 +421,17 @@ export default {
 
   /* Hover tooltip */
   .wgu-hover-tooltiptext {
-    width: 120px;
+    float: left; /* needed that max-width has an effect */
+    max-width: 200px;
     background-color: rgba(211, 211, 211, .9);
     color: #222;
     text-align: center;
     padding: 5px;
     border-radius: 6px;
+    margin-left: 10px;
 
     /* Position the hover tooltip */
-    position: absolute;
+    position: relative;
     z-index: 1;
   }
 

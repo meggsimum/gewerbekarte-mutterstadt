@@ -21,18 +21,35 @@ html {
 }
 
 .wgu-app-logo {
-  left: 8px;
-  bottom: 50px;
+  left: 15px;
+  bottom: 45px;
 }
 
-.wgu-measurewin {
+.wgu-bglayerswitcher {
+  position: absolute; 
+  z-index: 2; 
+  left: 15px;
+  top: 70px;
+  padding: 3px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.4) !important;
+}
+
+.wgu-bglayerswitcher:hover {
+  background-color: rgba(255,255,255,0.6) !important;
+}
+
+/* TODO 
+  Generalize the positioning concept for windows,
+  this interferes with positioning and draggable settings in the app.conf */
+.wgu-measurewin.wgu-floating {
   left: auto !important;
   top: auto !important;
   right: 10px;
   bottom: 4.8em;
 }
 
-.wgu-layerlist {
+.wgu-layerlist.wgu-floating {
   left: auto !important;
   top: 75px !important;
   right: 10px;
@@ -48,6 +65,11 @@ html {
   color: inherit;
 }
 
+.wgu-module-card.wgu-floating {
+  position: absolute;
+  z-index: 2;
+} 
+
 .wgu-win-title {
    -moz-user-select: none;
    -khtml-user-select: none;
@@ -55,4 +77,13 @@ html {
    /* Introduced in IE 10, See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/ */
    -ms-user-select: none;
    user-select: none;
+}
+
+.wgu-app-sidebar {
+  overflow: visible
+}
+
+.wgu-app-sidebar-toggle-btn {
+  left: 100%; 
+  visibility: visible
 }

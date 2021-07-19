@@ -60,6 +60,8 @@
       "loadOnlyVisible": true,
       "visible": false,
       "selectable": true,
+      "hoverable": true,
+      "hoverAttribute": "naam",
       "style": {
         "strokeColor": "white",
         "strokeWidth": 2,
@@ -85,8 +87,7 @@
       "tileGridRef": "dutch_rd",
       "attributions": "<a href='https://www.pdok.nl' target='_blank'>PDOK</a> by Dutch Kadaster",
       "isBaseLayer": false,
-      "visible": false,
-      "displayInLayerList": true
+      "visible": false
     },
     {
       "type": "WMS",
@@ -101,8 +102,7 @@
       "tileGridRef": "dutch_rd",
       "attributions": "<a href='https://www.pdok.nl' target='_blank'>PDOK</a> by Dutch Kadaster",
       "isBaseLayer": true,
-      "visible": false,
-      "displayInLayerList": true
+      "visible": false
     },
     {
       "type": "XYZ",
@@ -112,7 +112,7 @@
       "attributions": "<a href='https://www.pdok.nl' target='_blank'>PDOK</a> by Dutch Kadaster",
       "projection": "EPSG:28992",
       "tileGridRef": "dutch_rd",
-      "displayInLayerList": true,
+      "isBaseLayer": true,
       "visible": true
     }
   ],
@@ -120,12 +120,16 @@
   "modules": {
     "wgu-layerlist": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "layers",
+      "darkLayout": true,
       "draggable": false
     },
     "wgu-measuretool": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "photo_size_select_small",
+      "darkLayout": true,
       "draggable": false,
       "strokeColor": "#c62828",
       "fillColor": "rgba(198,40,40,0.2)",
@@ -136,7 +140,9 @@
     },
     "wgu-infoclick": {
       "target": "menu",
-      "win": true,
+      "win":"floating",
+      "icon": "info",
+      "darkLayout": true,
       "draggable": false,
       "initPos": {
         "left": 8,
@@ -165,8 +171,10 @@
     },
     "wgu-helpwin": {
       "target": "toolbar",
-      "darkLayout": true, 
-      "windowTitle": "About",
+      "win": "floating",
+      "icon": "help",
+      "darkLayout": true,
+      "title": "About",
       "textTitle": "About Wegue",
       "htmlContent": "<b>WebGIS with OpenLayers and Vue.js</b> Template and re-usable components for webmapping applications with OpenLayers and Vue.js",
       "infoLinkText": "More Info",

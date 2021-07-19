@@ -1,35 +1,29 @@
 <template>
 
-  <v-card class="wgu-measurewin" v-draggable-win="draggable" v-if="show" v-bind:style="{ left: left, top: top }">
-    <v-toolbar :color="color" class="" dark>
-      <v-icon>{{ icon }}</v-icon>
-      <v-toolbar-title class="wgu-win-title">{{ title }}</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-app-bar-nav-icon @click="show=false"><v-icon>close</v-icon></v-app-bar-nav-icon>
-    </v-toolbar>
+  <wgu-module-card v-bind="$attrs"
+      :moduleName="moduleName"
+      class="wgu-measurewin" 
+      :icon="icon" 
+      :title="title"
+      v-on:visibility-change="show">
 
-    <v-card-title primary-title>
-
+      <v-card-title primary-title>
       <!-- toggle button to choose measure type -->
       <wgu-measure-type-chooser
         :measureType="measureType"
         @wgu-measuretype-change="applyMeasureType"
       />
+      </v-card-title>
 
-    </v-card-title>
-
-    <v-card-actions>
-
-      <!-- result display -->
-      <wgu-measure-result :measureGeom="measureGeom" />
-
-    </v-card-actions>
-  </v-card>
-
+      <v-card-actions>
+        <!-- result display -->
+        <wgu-measure-result :measureGeom="measureGeom" />
+      </v-card-actions>
+  </wgu-module-card>
 </template>
 
 <script>
-  import { DraggableWin } from '../../directives/DraggableWin';
+  import ModuleCard from './../modulecore/ModuleCard';
   import { Mapable } from '../../mixins/Mapable';
   import MeasureTypeChooser from './MeasureTypeChooser';
   import MeasureResult from './MeasureResult';
@@ -37,48 +31,56 @@
 
   export default {
     name: 'wgu-measuretool-win',
-    directives: {
-      DraggableWin
-    },
+    inheritAttrs: false,
     components: {
+      'wgu-module-card': ModuleCard,
       'wgu-measure-type-chooser': MeasureTypeChooser,
       'wgu-measure-result': MeasureResult
     },
     mixins: [Mapable],
     props: {
-      color: {type: String, required: false, default: 'red darken-3'},
       icon: {type: String, required: false, default: 'photo_size_select_small'},
-      title: {type: String, required: false, default: 'Measure'},
-      draggable: {type: Boolean, required: false, default: true},
-      initPos: {type: Object, required: false}
+      title: {type: String, required: false, default: 'Measure'}
     },
     data () {
       return {
         moduleName: 'wgu-measuretool',
         measureGeom: null,
-        measureType: 'distance',
-        show: false,
-        left: this.initPos ? this.initPos.left + 'px' : '0',
-        top: this.initPos ? this.initPos.top + 'px' : '0'
+        measureType: 'distance'
+      }
+    },
+    destroy () {
+      if (this.olMapCtrl) {
+        this.olMapCtrl.destroy();
+        this.olMapCtrl = undefined;
       }
     },
     watch: {
-      show () {
-        var me = this;
-        if (me.show === true) {
-          me.olMapCtrl.addInteraction(me.measureType, me.onMeasureVertexSet);
-        } else {
-          me.olMapCtrl.removeInteraction();
-        }
-      },
       measureType () {
-        var me = this;
+        if (!this.olMapCtrl) {
+          return;
+        }
         // reset old geom
-        me.measureGeom = {};
-        me.olMapCtrl.addInteraction(me.measureType, me.onMeasureVertexSet);
+        this.measureGeom = {};
+        this.olMapCtrl.addInteraction(this.measureType, this.onMeasureVertexSet);
       }
     },
     methods: {
+      /**
+       * (Un-)Register map interactions when the visibility of the module changes.
+       *
+       * @param  {boolean} visible New visibility state
+       */
+      show (visible) {
+        if (!this.olMapCtrl) {
+          return;
+        }
+        if (visible) {
+          this.olMapCtrl.addInteraction(this.measureType, this.onMeasureVertexSet);
+        } else {
+          this.olMapCtrl.removeInteraction();
+        }
+      },
       /**
        * Applies the changed measure value to this.measureType.
        * Called as callback of MeasureTypeChooser
@@ -93,11 +95,22 @@
        * This function is executed, after the map is bound (see mixins/Mapable)
        */
       onMapBound () {
-        const me = this;
-        const measureConf = me.$appConfig.modules[me.moduleName] || {};
-        this.olMapCtrl = new OlMeasureController(me.map, measureConf);
+        if (this.unbound) {
+          return;
+        }
 
-        me.olMapCtrl.createMeasureLayer();
+        // TODO: Should we explicitly declare all attributes as props?
+        this.olMapCtrl = new OlMeasureController(this.map, this.$attrs);
+        this.olMapCtrl.createMeasureLayer();
+      },
+      /**
+       * This function is executed, after the map is bound (see mixins/Mapable)
+       */
+      onMapUnbound () {
+        if (this.olMapCtrl) {
+          this.olMapCtrl.destroy();
+          this.olMapCtrl = undefined;
+        }
       },
       /**
        * Callback function executed when user sets a measure point on the map.
@@ -114,16 +127,3 @@
     }
   }
 </script>
-
-<style>
-
-  .wgu-measurewin {
-    background-color: white;
-    z-index: 2;
-  }
-
-  .v-card.wgu-measurewin {
-    position: absolute;
-  }
-
-</style>

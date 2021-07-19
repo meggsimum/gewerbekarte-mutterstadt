@@ -1,6 +1,7 @@
 {
 
   "title": "Vue.js / OpenLayers WebGIS",
+  "browserTitle": "Wegue Demo App",
 
   "baseColor": "red darken-3",
 
@@ -58,7 +59,19 @@
           "offsetY": 15,
           "align": "center"
         }
-      }
+      },
+      "columnMapping": {
+        "name": "Name",
+        "email": "Email",
+        "website": "Website"
+      },
+      "selectStyle": {
+        "radius": 10,
+        "strokeColor": "gray",
+        "strokeWidth": 5,
+        "fillColor": "rgb(255, 255, 0, 0.2)"
+      },
+      "doAppendSelectStyle": true
     },
     {
       "type": "WFS",
@@ -75,12 +88,20 @@
       "visible": false,
       "selectable": true,
       "style": {
-        "radius": 6,
-        "strokeColor": "blue",
-        "strokeWidth": 2,
-        "fillColor": "rgba(155,153,51,0.5)"
+        "textIcon": "local_gas_station",
+        "font": "normal 30px Material Icons",
+        "fillColor": "blue"
       },
-      "attributions": "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors."
+      "attributions": "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors.",
+      "columnMapping": {
+        "name": "Name"
+      },
+      "selectStyle": {
+        "textIcon": "star",
+        "font": "normal 30px Material Icons",
+        "fillColor": "black"
+      },
+      "doAppendSelectStyle": false
     },
 
     {
@@ -146,7 +167,7 @@
       "url": "https://tile.opentopomap.org/{z}/{x}/{y}.png",
       "attributions": "Map data: <a href=\"https://openstreetmap.org/copyright\">©OpenStreetMap</a>-contributors, SRTM | Map representation (Kartendarstellung): © <a href=\"http://opentopomap.org/\">OpenTopoMap</a> (<a href=\"https://creativecommons.org/licenses/by-sa/3.0/\">CC-BY-SA</a>)",
       "lid": "opentopomap",
-      "displayInLayerList": true,
+      "isBaseLayer": true,
       "visible": false
     },
 
@@ -154,9 +175,8 @@
       "type": "OSM",
       "lid": "osm-bg",
       "name": "OSM",
-      "isBaseLayer": false,
-      "visible": true,
-      "displayInLayerList": true
+      "isBaseLayer": true,
+      "visible": true
     }
 
   ],
@@ -164,12 +184,16 @@
   "modules": {
     "wgu-layerlist": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "layers",
+      "darkLayout": true,
       "draggable": false
     },
     "wgu-measuretool": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "photo_size_select_small",
+      "darkLayout": true,
       "draggable": false,
       "strokeColor": "#c62828",
       "fillColor": "rgba(198,40,40,0.2)",
@@ -180,12 +204,15 @@
     },
     "wgu-infoclick": {
       "target": "menu",
-      "win": true,
+      "win": "floating",
+      "icon": "info",
+      "darkLayout": true,
       "draggable": false,
       "initPos": {
         "left": 8,
         "top": 74
-      }
+      },
+      "showMedia": false
     },
     "wgu-geocoder": {
       "target": "toolbar",
@@ -208,8 +235,10 @@
     },
     "wgu-helpwin": {
       "target": "toolbar",
-      "darkLayout": true, 
-      "windowTitle": "About",
+      "win": "floating",
+      "icon": "help",
+      "darkLayout": true,
+      "title": "About",
       "textTitle": "About Wegue",
       "htmlContent": "<b>WebGIS with OpenLayers and Vue.js</b> Template and re-usable components for webmapping applications with OpenLayers and Vue.js",
       "infoLinkText": "More Info",
@@ -218,6 +247,13 @@
     "wgu-geolocator": {
       "target": "toolbar",
       "darkLayout": true
+    },
+    "wgu-attributetable": {
+      "target": "menu",
+      "win": "floating",
+      "icon": "table_chart",
+      "darkLayout": true,
+      "syncTableMapSelection": true
     }
   }
 }
