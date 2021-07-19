@@ -3,3 +3,6 @@
 div.ol-attribution.ol-uncollapsible {
     max-width: 300px;
   }
+
+/* disable basemap switcher */
+.wgu-bglayerswitcher { display: none; }

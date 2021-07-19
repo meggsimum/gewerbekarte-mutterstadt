@@ -7,6 +7,7 @@ import Map from 'ol/Map'
 import View from 'ol/View'
 import Attribution from 'ol/control/Attribution';
 import Zoom from 'ol/control/Zoom';
+import SelectInteraction from 'ol/interaction/Select';
 import {
   DragAndDrop,
   defaults as defaultInteractions
@@ -28,7 +29,6 @@ import ColorUtil from '../../util/Color';
 import LayerUtil from '../../util/Layer';
 import PermalinkController from './PermalinkController';
 import {Circle, Stroke, Style, Fill} from 'ol/style';
-import MapInteractionUtil from '../../util/MapInteraction';
 
 export default {
   name: 'wgu-map',
