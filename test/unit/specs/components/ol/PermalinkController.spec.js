@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { shallowMount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import Map from '@/components/ol/Map';
 import VectorLayer from 'ol/layer/Vector';
 const permalinkDef = {
@@ -8,26 +8,45 @@ const permalinkDef = {
   mapLayers: [{
     'type': 'OSM',
     'lid': 'osm-bg',
-    'name': 'OSM',
     'isBaseLayer': false,
     'visible': true,
     'selectable': false,
-    'displayInLayerList': true
+    'displayInLayerList': false
   },
   {
-    'type': 'WMS',
+    'type': 'TILEWMS',
     'lid': 'ahocevar-wms',
-    'name': 'WMS (ahocevar)',
     'format': 'image/png',
     'layers': 'topp:states',
     'url': 'https://ahocevar.com/geoserver/wms',
     'transparent': true,
-    'singleTile': false,
     'projection': 'EPSG:3857',
     'attribution': '',
     'isBaseLayer': false,
     'visible': false,
     'displayInLayerList': true
+  },
+  {
+    'type': 'IMAGEWMS',
+    'lid': 'ahocevar-imagewms',
+    'format': 'image/png',
+    'layers': 'ne:ne_10m_populated_places',
+    'url': 'https://ahocevar.com/geoserver/wms',
+    'transparent': true,
+    'projection': 'EPSG:3857',
+    'attribution': '',
+    'isBaseLayer': false,
+    'visible': false,
+    'displayInLayerList': true
+  },
+  {
+    'type': 'OSM',
+    'lid': 'permalink-excluded-layer',
+    'isBaseLayer': false,
+    'visible': true,
+    'selectable': false,
+    'displayInLayerList': false,
+    'supportsPermalink': false
   }],
   permalink: {
     'location': 'hash',
@@ -36,8 +55,11 @@ const permalinkDef = {
     'projection': 'EPSG:4326',
     'paramPrefix': '',
     'history': true
-  }
+  },
+  modules: {}
 };
+
+document.location.hash = '';
 
 describe('ol/Map.vue', () => {
   describe('data - Map NOT Provides PermalinkController when NOT defined', () => {
@@ -45,12 +67,16 @@ describe('ol/Map.vue', () => {
     let vm;
     beforeEach(() => {
       Vue.prototype.$appConfig = {};
-      comp = shallowMount(Map);
+      comp = mount(Map);
       vm = comp.vm;
     });
 
     it('Map has NOT instantiated permalinkController', () => {
       expect(vm.permalinkController).to.equal(undefined);
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 
@@ -59,12 +85,16 @@ describe('ol/Map.vue', () => {
     let vm;
     beforeEach(() => {
       Vue.prototype.$appConfig = permalinkDef;
-      comp = shallowMount(Map);
+      comp = mount(Map);
       vm = comp.vm;
     });
 
     it('Map has instantiated permalinkController', () => {
       expect(vm.permalinkController).to.not.be.empty;
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 
@@ -73,24 +103,29 @@ describe('ol/Map.vue', () => {
     let vm;
     beforeEach(() => {
       Vue.prototype.$appConfig = permalinkDef;
-      comp = shallowMount(Map);
+      comp = mount(Map);
       vm = comp.vm;
     });
 
     it('Setup permalinkController', () => {
-      vm.permalinkController.setup();
       expect(vm.permalinkController.shouldUpdate).equals(true);
-      expect(vm.permalinkController.layerListeners.length).to.equal(2);
+      expect(vm.map.getLayers().getLength()).to.equal(4);
       vm.permalinkController.unsubscribeLayers();
       expect(vm.permalinkController.layerListeners.length).to.equal(0);
       vm.permalinkController.subscribeLayers();
-      expect(vm.permalinkController.layerListeners.length).to.equal(2);
+      expect(vm.permalinkController.layerListeners.length).to.equal(4);
     });
+
     it('Layer Listeners are (re)created when the layer stack changes', () => {
-      vm.permalinkController.setup();
-      expect(vm.permalinkController.layerListeners.length).to.equal(2);
       vm.map.addLayer(new VectorLayer());
-      expect(vm.permalinkController.layerListeners.length).to.equal(3);
+      expect(vm.permalinkController.layerListeners.length).to.equal(5);
+      expect(vm.map.getLayers().getLength()).to.equal(5);
+      vm.permalinkController.unsubscribeLayers();
+      expect(vm.permalinkController.layerListeners.length).to.equal(0);
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 
@@ -99,7 +134,7 @@ describe('ol/Map.vue', () => {
     let vm;
     beforeEach(() => {
       Vue.prototype.$appConfig = permalinkDef;
-      comp = shallowMount(Map);
+      comp = mount(Map);
       vm = comp.vm;
     });
 
@@ -125,7 +160,11 @@ describe('ol/Map.vue', () => {
           layer.setVisible(true);
         }
       });
-      expect(vm.permalinkController.getParamStr()).to.equal('#z=' + newZoom + '&c=8.9832%2C17.6789&r=0&l=ahocevar-wms%2Cosm-bg');
+      expect(vm.permalinkController.getParamStr()).to.equal('#z=' + newZoom + '&c=8.9832%2C17.6789&r=0&l=ahocevar-imagewms%2Cahocevar-wms%2Cosm-bg');
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 
@@ -134,7 +173,7 @@ describe('ol/Map.vue', () => {
     let vm;
     beforeEach(() => {
       Vue.prototype.$appConfig = permalinkDef;
-      comp = shallowMount(Map);
+      comp = mount(Map);
       vm = comp.vm;
     });
 
@@ -150,9 +189,9 @@ describe('ol/Map.vue', () => {
       expect(mapView.getZoom()).to.equal(4);
       expect(Math.round(mapView.getCenter()[0])).to.equal(445278);
       expect(Math.round(mapView.getCenter()[1])).to.equal(6800125);
-      expect(Math.round(map.getLayers().getLength())).to.equal(2);
+      expect(Math.round(map.getLayers().getLength())).to.equal(4);
     });
-    // Below gives problems in Karma as the document is reloaded by setting document.locaiton.search!
+    // Below gives problems in Karma as the document is reloaded by setting document.location.search!
     // it('Setup and apply permalinkController - apply from document.location.search', () => {
     //   permalinkDef.permalink.location = 'search';
     //   vm.permalinkController.setup();
@@ -168,5 +207,9 @@ describe('ol/Map.vue', () => {
     //   expect(Math.round(mapView.getCenter()[1])).to.equal(6800125);
     //   expect(Math.round(map.getLayers().getLength())).to.equal(2);
     // });
+
+    afterEach(() => {
+      comp.destroy();
+    });
   });
 });

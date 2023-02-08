@@ -1,3 +1,5 @@
+import ViewAnimationUtil from './ViewAnimation';
+
 /**
  * Util class for OL layers
  */
@@ -12,8 +14,6 @@ const LayerUtil = {
    */
   getLayersBy (key, value, olMap) {
     if (!olMap) {
-      console.warn('No OL map passed to LayerUtil.getLayersBy - ' +
-        'no layer detection possible!');
       return [];
     }
 
@@ -50,7 +50,7 @@ const LayerUtil = {
       return;
     }
     const extent = vecLayer.getSource().getExtent();
-    olMap.getView().fit(extent);
+    ViewAnimationUtil.to(olMap.getView(), extent);
   }
 }
 

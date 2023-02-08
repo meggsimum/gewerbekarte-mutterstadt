@@ -7,7 +7,6 @@ import Map from 'ol/Map'
 import View from 'ol/View'
 import Attribution from 'ol/control/Attribution';
 import Zoom from 'ol/control/Zoom';
-import SelectInteraction from 'ol/interaction/Select';
 import {
   DragAndDrop,
   defaults as defaultInteractions
@@ -15,27 +14,28 @@ import {
 import RotateControl from 'ol/control/Rotate';
 import Projection from 'ol/proj/Projection';
 import TileGrid from 'ol/tilegrid/TileGrid';
-import {register as olproj4} from 'ol/proj/proj4';
-import {get as getProj} from 'ol/proj';
-import Overlay from 'ol/Overlay';
-import {GPX, GeoJSON, IGC, KML, TopoJSON} from 'ol/format';
-import {Vector as VectorLayer} from 'ol/layer';
-import {Vector as VectorSource} from 'ol/source';
+import { register as olproj4 } from 'ol/proj/proj4';
+import { get as getProj } from 'ol/proj';
+import { GPX, GeoJSON, IGC, KML, TopoJSON } from 'ol/format';
+import { Vector as VectorLayer } from 'ol/layer';
+import { Vector as VectorSource } from 'ol/source';
 import proj4 from 'proj4'
 // import the app-wide EventBus
 import { WguEventBus } from '../../WguEventBus.js';
 import { LayerFactory } from '../../factory/Layer.js';
-import ColorUtil from '../../util/Color';
 import LayerUtil from '../../util/Layer';
 import PermalinkController from './PermalinkController';
-import {Circle, Stroke, Style, Fill} from 'ol/style';
+import HoverController from './HoverController';
+import MapInteractionUtil from '../../util/MapInteraction';
+import ViewAnimationUtil from '../../util/ViewAnimation';
+import { ColorTheme } from '../../mixins/ColorTheme'
 
 export default {
   name: 'wgu-map',
+  mixins: [ ColorTheme ],
   props: {
-    color: {type: String, required: false, default: 'red darken-3'},
-    collapsibleAttribution: {type: Boolean, default: false},
-    rotateableMap: {type: Boolean, required: false, default: false}
+    collapsibleAttribution: { type: Boolean, default: false },
+    rotateableMap: { type: Boolean, required: false, default: false }
   },
   data () {
     return {
@@ -64,20 +64,55 @@ export default {
     // Make the OL map accessible for Mapable mixin even 'ol-map-mounted' has
     // already been fired. Don not use directly in cmps, use Mapable instead.
     Vue.prototype.$map = me.map;
+
+    // Set the target for the OL canvas and tie it`s size to ol-map-container.
+    // Remarks: 'ol-map-container' does not exist in the scope of the current unit test,
+    // therefore flag the initialization to prevent errors.
+    const container = document.getElementById('ol-map-container');
+    if (container) {
+      me.map.setTarget(container);
+
+      const resizeObserver = new ResizeObserver(() => {
+        me.map.updateSize();
+      });
+      resizeObserver.observe(container);
+    }
+
     // Send the event 'ol-map-mounted' with the OL map as payload
     WguEventBus.$emit('ol-map-mounted', me.map);
 
-    // resize the map, so it fits to parent
-    window.setTimeout(() => {
-      me.map.setTarget(document.getElementById('ol-map-container'));
-      me.map.updateSize();
-
+    // TODO
+    //  Re-evaluate whether and if yes which of the following operations have to be deferred.
+    //  If so, a better implementation could be to rely on this.$nextTick(), which currently causes trouble
+    //  for the units tests (deferred operations are invoked after the component has already been destroyed).
+    me.timerHandle = setTimeout(() => {
       // adjust the bg color of the OL buttons (like zoom, rotate north, ...)
       me.setOlButtonColor();
-
-      // initialize map hover functionality
-      me.setupMapHover();
     }, 200);
+  },
+  destroyed () {
+    // Send the event 'ol-map-unmounted' with the OL map as payload
+    WguEventBus.$emit('ol-map-unmounted', this.map);
+
+    // Destroy controllers, remove map references
+    if (this.timerHandle) {
+      clearTimeout(this.timerHandle);
+    }
+    if (this.permalinkController) {
+      this.permalinkController.tearDown();
+      this.permalinkController = undefined;
+    }
+    if (this.hoverController) {
+      this.hoverController.destroy();
+      this.hoverController = undefined;
+    }
+    if (this.map) {
+      this.map.getLayers().clear();
+      this.map.getInteractions().clear();
+      this.map.getControls().clear();
+      this.map.getOverlays().clear();
+    }
+    this.map = undefined;
   },
   created () {
     // make map rotateable according to property
@@ -136,8 +171,11 @@ export default {
     });
 
     // create layers from config and add them to map
+    this.registerLayerEvents();
     const layers = this.createLayers();
     this.map.getLayers().extend(layers);
+
+    this.hoverController = this.createHoverController();
 
     if (this.$appConfig.permalink) {
       this.permalinkController = this.createPermalinkController();
@@ -159,68 +197,59 @@ export default {
       const mapLayersConfig = appConfig.mapLayers || [];
       mapLayersConfig.reverse().forEach(function (lConf) {
         // Some Layers may require a TileGrid object
-        lConf.tileGrid = lConf.tileGridRef ? me.tileGrids[lConf.tileGridRef] : null;
+        // Remarks: Passing null instead of undefined as parameters into the
+        //  constructor of OpenLayers sources overwrites OpenLayers defaults.
+        lConf.tileGrid = lConf.tileGridRef ? me.tileGrids[lConf.tileGridRef] : undefined;
+
+        // Automatically set the appropriate z-index for the layer type,
+        // if not defined explicitly.
+        lConf.zIndex = lConf.zIndex ?? (lConf.isBaseLayer ? -1 : 0);
+
+        // Default usage of permalink to true, if not explicitly defined.
+        lConf.supportsPermalink = lConf.supportsPermalink ?? true;
 
         let layer = LayerFactory.getInstance(lConf, me.map);
         layers.push(layer);
 
         // if layer is selectable register a select interaction
         if (lConf.selectable) {
-          // define style for selection
-          const selectStyle = new Style({
-            image: new Circle({
-              radius: 20,
-              fill: new Fill(
-                {
-                  // TODO: currently white, make configurable
-                  color: 'rgb(255, 255, 255, 0.3)'
-                }
-              ),
-              stroke: new Stroke(
-                {
-                  color: Vue.prototype.$appConfig.baseColor,
-                  width: 4
-                }
-              )
-            })
-          });
-
-          // we create a combination of the existing style and the
-          // selection style
-          const selectClick = new SelectInteraction({
-            layers: [layer],
-            hitTolerance: 5,
-            style: function (feature, resolution) {
-              const lid = lConf.lid;
-              // we need to call layer again in case it has
-              // changed since initialisation
-              const layer = LayerUtil.getLayerByLid(lid, me.map);
-              if (!layer) {
-                return;
-              }
-              // TODO: check if this a function or a static object
-              const layerStyleFunction = layer.getStyle();
-              // we return an array of the selection style and the features style
-              return [selectStyle, layerStyleFunction(feature, resolution)]
-            }
-          });
-
-          // forward an event if feature selection changes
-          selectClick.on('select', function (evt) {
-            // TODO use identifier for layer (once its implemented)
-            WguEventBus.$emit(
-              'map-selectionchange',
-              layer.get('lid'),
-              evt.selected,
-              evt.deselected
-            );
-          });
+          let selectClick = MapInteractionUtil.createSelectInteraction(
+            layer,
+            lConf.selectStyle,
+            lConf.doAppendSelectStyle
+          )
           // register/activate interaction on map
           me.map.addInteraction(selectClick);
         }
       });
 
       return layers;
+    },
+
+    /**
+     * Hook up events to process newly added and modified OL layers.
+     * This is currently used to update locale specific layer properties.
+     */
+    registerLayerEvents () {
+      const layers = this.map.getLayers();
+      layers.on('add', evt => {
+        const layer = evt.element;
+        this.updateLocalizedLayerProps(evt.element);
+        layer.on('propertychange', evt => {
+          if (evt.key === 'lid' || evt.key === 'langKey') {
+            this.updateLocalizedLayerProps(evt.target)
+          }
+        })
+      })
+    },
+
+    /**
+     * Creates a HoverController, override in subclass for specializations.
+     *
+     * @return {HoverController} HoverController instance.
+     */
+    createHoverController () {
+      return new HoverController(this.map);
     },
 
     /**
@@ -236,93 +265,28 @@ export default {
      * Sets the background color of the OL buttons to the color property.
      */
     setOlButtonColor () {
-      var me = this;
+      const colors = 'secondary onsecondary--text'
 
-      if (ColorUtil.isCssColor(me.color)) {
-        // directly apply the given CSS color
-        if (document.querySelector('.ol-zoom')) {
-          document.querySelector('.ol-zoom .ol-zoom-in').style.backgroundColor = me.color;
-          document.querySelector('.ol-zoom .ol-zoom-out').style.backgroundColor = me.color;
-        }
-        if (document.querySelector('.ol-rotate')) {
-          document.querySelector('.ol-rotate .ol-rotate-reset').style.backgroundColor = me.color;
-        }
-      } else {
-        // apply vuetify color by transforming the color to the corresponding
-        // CSS class (see https://vuetifyjs.com/en/framework/colors)
-        const [colorName, colorModifier] = me.color.toString().trim().split(' ', 2);
-        if (document.querySelector('.ol-zoom')) {
-          document.querySelector('.ol-zoom .ol-zoom-in').classList.add(colorName);
-          document.querySelector('.ol-zoom .ol-zoom-in').classList.add(colorModifier);
-          document.querySelector('.ol-zoom .ol-zoom-out').classList.add(colorName);
-          document.querySelector('.ol-zoom .ol-zoom-out').classList.add(colorModifier);
-        }
-        if (document.querySelector('.ol-rotate')) {
-          document.querySelector('.ol-rotate .ol-rotate-reset').classList.add(colorName);
-          document.querySelector('.ol-rotate .ol-rotate-reset').classList.add(colorModifier);
-        }
+      // apply vuetify color by transforming the color to the corresponding
+      // CSS class (see https://vuetifyjs.com/en/framework/colors)
+      const classes = colors.toString().trim().split(' ');
+
+      // zoom
+      if (document.querySelector('.ol-zoom')) {
+        classes.forEach(function (c) {
+          document.querySelector('.ol-zoom .ol-zoom-in').classList.add(c);
+          document.querySelector('.ol-zoom .ol-zoom-out').classList.add(c);
+        });
+      }
+
+      // rotate
+      if (document.querySelector('.ol-rotate')) {
+        classes.forEach(function (c) {
+          document.querySelector('.ol-rotate .ol-rotate-reset').classList.add(c);
+        });
       }
     },
-    /**
-     * Initializes the map hover functionality:
-     * Adds a little tooltip like DOM element, wrapped as OL Overlay to the
-     * map.
-     * Registers a 'pointermove' event on the map and shows the layer's
-     * 'hoverAttribute' if the layer is configured as 'hoverable'
-     */
-    setupMapHover () {
-      const me = this;
-      const map = me.map;
-      let overlayEl;
 
-      // create a span to show map tooltip
-      overlayEl = document.createElement('span');
-      overlayEl.classList.add('wgu-hover-tooltiptext');
-      map.getTarget().append(overlayEl);
-
-      me.overlayEl = overlayEl;
-
-      // wrap the tooltip span in a OL overlay and add it to map
-      me.overlay = new Overlay({
-        element: overlayEl,
-        autoPan: true,
-        autoPanAnimation: {
-          duration: 250
-        }
-      });
-      map.addOverlay(me.overlay);
-
-      // show tooltip if a hoverable feature gets hit with the mouse
-      map.on('pointermove', me.onPointerMove, me);
-    },
-    /**
-     * Shows the hover tooltip on the map if an appropriate feature of a
-     * 'hoverable' layer was hit with the mouse.
-     *
-     * @param  {Object} event The OL event for pointermove
-     */
-    onPointerMove (event) {
-      const me = this;
-      const map = me.map;
-      const overlayEl = me.overlayEl;
-      let hoverAttr;
-      const features = map.getFeaturesAtPixel(event.pixel, {layerFilter: (layer) => {
-        if (layer.get('hoverable')) {
-          hoverAttr = layer.get('hoverAttribute');
-        }
-        return layer.get('hoverable');
-      }});
-      if (!features || features.length === 0 || !hoverAttr) {
-        hoverAttr = null;
-        overlayEl.innerHTML = null;
-        me.overlay.setPosition(undefined);
-        return;
-      }
-      const feature = features[0];
-      var attr = feature.get(hoverAttr);
-      overlayEl.innerHTML = attr;
-      me.overlay.setPosition(event.coordinate);
-    },
     /**
      * Initializes the geodata drag-drop functionality:
      * Adds the ol/interaction/DragAndDrop to the map and draws the dropped
@@ -363,7 +327,7 @@ export default {
         ddSource.addFeatures(event.features);
 
         if (mapDdConf.zoomToData === true) {
-          this.map.getView().fit(ddSource.getExtent());
+          ViewAnimationUtil.to(this.map.getView(), ddSource.getExtent());
         }
       }, this);
 
@@ -379,8 +343,10 @@ export default {
       const vectorSource = new VectorSource({});
       const vectorLayer = new VectorLayer({
         // random unique layer ID
-        lid: 'wegue-drag-drop-' + (Math.random() * 1000000).toFixed(0),
-        name: mapDdConf.layerName || 'Drag/Drop Data',
+        // For localization the randomized layer ID cannot be used, therefore map it to a fixed key
+        // which will be part of the language path ('mapLayers.wgu-drag-drop-layer')
+        lid: 'wgu-drag-drop-layer-' + (Math.random() * 1000000).toFixed(0),
+        langKey: 'wgu-drag-drop-layer',
         wegueDragDropLayer: true,
         source: vectorSource,
         displayInLayerList: mapDdConf.displayInLayerList
@@ -388,6 +354,47 @@ export default {
       this.map.addLayer(vectorLayer);
 
       return vectorLayer;
+    },
+
+    /**
+     * Updates locale specific layer properties. This is typically invoked after changes to
+     * layer attributes, changes to the OpenLayers layer collection to process new layers
+     * or after changes to the active locale.
+     *
+     * Remarks:
+     * If a layer definition exists in the application context, any 'name' or 'attribution'
+     * property declared there will take precedence over the ones declared in the
+     * language packs.
+     *
+     * @param {ol.layer.Layer} OL layer instance
+     */
+    updateLocalizedLayerProps (layer) {
+      const langKey = layer.get('langKey') || layer.get('lid');
+      const pathLayer = 'mapLayers.' + langKey;
+
+      // Update layer name.
+      const pathName = pathLayer + '.name';
+      layer.set('name', layer.get('confName') || this.$t(pathName));
+
+      // Update optional layer attributions.
+      const pathAttributions = pathLayer + '.attributions';
+      const source = layer.getSource();
+      if (source &&
+         (typeof source.setAttributions === 'function') &&
+         (layer.get('confAttributions') || this.$te(pathAttributions))) {
+        source.setAttributions(layer.get('confAttributions') || this.$t(pathAttributions));
+      }
+    }
+  },
+  watch: {
+    /**
+     * Watch for locale changes and update language specific layer attributes.
+     */
+    '$i18n.locale': function () {
+      const layers = this.map.getLayers();
+      layers.forEach(layer => {
+        this.updateLocalizedLayerProps(layer);
+      });
     }
   }
 
@@ -406,19 +413,4 @@ export default {
   div.ol-attribution.ol-uncollapsible {
     font-size: 10px;
   }
-
-  /* Hover tooltip */
-  .wgu-hover-tooltiptext {
-    width: 120px;
-    background-color: rgba(211, 211, 211, .9);
-    color: #222;
-    text-align: center;
-    padding: 5px;
-    border-radius: 6px;
-
-    /* Position the hover tooltip */
-    position: absolute;
-    z-index: 1;
-  }
-
 </style>

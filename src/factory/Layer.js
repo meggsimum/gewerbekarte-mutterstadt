@@ -1,4 +1,5 @@
-import TileLayer from 'ol/layer/Tile';
+import { Image as ImageLayer, Tile as TileLayer } from 'ol/layer';
+import ImageWMS from 'ol/source/ImageWMS';
 import TileWmsSource from 'ol/source/TileWMS';
 import OsmSource from 'ol/source/OSM';
 import VectorTileLayer from 'ol/layer/VectorTile'
@@ -13,10 +14,12 @@ import GML32Format from 'ol/format/GML32'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import XyzSource from 'ol/source/XYZ'
-import {bbox as bboxStrategy} from 'ol/loadingstrategy';
+import { bbox as bboxStrategy } from 'ol/loadingstrategy';
 import { OlStyleFactory } from './OlStyle'
-import {applyTransform} from 'ol/extent';
-import {getTransform} from 'ol/proj';
+import { applyTransform } from 'ol/extent';
+import { getTransform } from 'ol/proj';
+import axios from 'axios';
+import ObjectUtil from '../util/Object';
 
 /**
  * Factory, which creates OpenLayers layer instances according to a given config
@@ -57,16 +60,11 @@ export const LayerFactory = {
    * @return {ol/layer/Base} OL layer instance
    */
   getInstance (lConf, olMap) {
-    // apply LID (Layer ID) if not existent
-    if (!lConf.lid) {
-      // Make a unique layerId from Layer name and URL so contexts
-      // like permalinks can be reapplied.
-      lConf.lid = btoa(lConf.url + lConf.name).substr(0, 6);
-    }
-
     // create correct layer type
-    if (lConf.type === 'WMS') {
-      return this.createWmsLayer(lConf);
+    if (lConf.type === 'TILEWMS') {
+      return this.createTileWmsLayer(lConf);
+    } else if (lConf.type === 'IMAGEWMS') {
+      return this.createImageWmsLayer(lConf);
     } else if (lConf.type === 'WFS') {
       return this.createWfsLayer(lConf, olMap);
     } else if (lConf.type === 'XYZ') {
@@ -83,29 +81,84 @@ export const LayerFactory = {
   },
 
   /**
-   * Returns an OpenLayers WMS layer instance due to given config.
-   *
+   * Returns an OL layer options initialization object, containing
+   * attributes common to all layer types.
    * @param  {Object} lConf  Layer config object
-   * @return {ol.layer.Tile} OL WMS layer instance
+   * @return {Object} OL layer options
    */
-  createWmsLayer (lConf) {
-    const layer = new TileLayer({
-      name: lConf.name,
+  getCommonLayerOptions (lConf) {
+    return {
       lid: lConf.lid,
+      isBaseLayer: lConf.isBaseLayer,
+      previewImage: lConf.previewImage,
       displayInLayerList: lConf.displayInLayerList,
+      supportsPermalink: lConf.supportsPermalink,
       extent: lConf.extent,
       visible: lConf.visible,
       opacity: lConf.opacity,
+      opacityControl: lConf.opacityControl,
+      zIndex: lConf.zIndex,
+      confName: lConf.name,
+      confAttributions: lConf.attributions,
+      legend: lConf.legend,
+      legendUrl: lConf.legendUrl,
+      legendOptions: lConf.legendOptions
+    };
+  },
+
+  /**
+   * Returns an OpenLayers WMS layer instance due to given config.
+   *
+   * @param  {Object} lConf  Layer config object
+   * @return {ol.layer.Image} OL WMS layer instance
+   */
+  createImageWmsLayer (lConf) {
+    // apply additional HTTP params
+    const params = { 'LAYERS': lConf.layers };
+    ObjectUtil.mergeDeep(params, lConf.params);
+
+    const layer = new ImageLayer({
+      ...this.getCommonLayerOptions(lConf),
+      source: new ImageWMS({
+        url: lConf.url,
+        params: params,
+        serverType: lConf.serverType,
+        ratio: lConf.ratio,
+        interpolate: lConf.interpolate,
+        projection: lConf.projection,
+        crossOrigin: lConf.crossOrigin,
+        hoverable: lConf.hoverable,
+        hoverAttribute: lConf.hoverAttribute,
+        hoverOverlay: lConf.hoverOverlay
+      })
+    });
+
+    return layer;
+  },
+
+  /**
+   * Returns an OpenLayers Tiled WMS layer instance due to given config.
+   *
+   * @param  {Object} lConf  Layer config object
+   * @return {ol.layer.Tile} OL Tiled WMS layer instance
+   */
+  createTileWmsLayer (lConf) {
+    // apply additional HTTP params
+    const params = { 'LAYERS': lConf.layers };
+    ObjectUtil.mergeDeep(params, lConf.params);
+
+    const layer = new TileLayer({
+      ...this.getCommonLayerOptions(lConf),
       source: new TileWmsSource({
         url: lConf.url,
-        params: {
-          'LAYERS': lConf.layers,
-          'TILED': lConf.tiled
-        },
+        params: params,
         serverType: lConf.serverType,
-        attributions: lConf.attributions,
         tileGrid: lConf.tileGrid,
-        projection: lConf.projection
+        projection: lConf.projection,
+        crossOrigin: lConf.crossOrigin,
+        hoverable: lConf.hoverable,
+        hoverAttribute: lConf.hoverAttribute,
+        hoverOverlay: lConf.hoverOverlay
       })
     });
 
@@ -147,9 +200,9 @@ export const LayerFactory = {
       loader: (extent) => {
         // assemble WFS GetFeature request
         let wfsRequest = lConf.url + '?service=WFS&' +
-        'version=' + lConf.version + '&request=GetFeature&' +
-        'typename=' + lConf.typeName + '&' +
-        'outputFormat=' + outputFormat + '&srsname=' + lConf.projection;
+          'version=' + lConf.version + '&request=GetFeature&' +
+          'typename=' + lConf.typeName + '&' +
+          'outputFormat=' + outputFormat + '&srsname=' + lConf.projection;
 
         // add WFS version dependent feature limitation
         if (Number.isInteger(parseInt(lConf.maxFeatures))) {
@@ -168,26 +221,30 @@ export const LayerFactory = {
         }
 
         // load data from WFS, parse and add to vector source
-        fetch(wfsRequest).then((response) => {
-          return response.text();
-        }).then((responseText) => {
-          const feats = vectorSource.getFormat().readFeatures(responseText);
-          vectorSource.addFeatures(feats);
-        });
+        const request = {
+          method: 'GET',
+          url: wfsRequest
+        };
+        axios(request)
+          .then(response => {
+            const feats = vectorSource.getFormat().readFeatures(response.data);
+            vectorSource.addFeatures(feats);
+          })
+          .catch(() => {
+            vectorSource.removeLoadedExtent(extent);
+          });
       },
-      strategy: lConf.loadOnlyVisible !== false ? bboxStrategy : undefined,
-      attributions: lConf.attributions
+      strategy: lConf.loadOnlyVisible !== false ? bboxStrategy : undefined
     });
 
     var vector = new VectorLayer({
-      name: lConf.name,
-      lid: lConf.lid,
-      displayInLayerList: lConf.displayInLayerList,
-      extent: lConf.extent,
-      visible: lConf.visible,
-      opacity: lConf.opacity,
+      ...this.getCommonLayerOptions(lConf),
       source: vectorSource,
-      style: OlStyleFactory.getInstance(lConf.style)
+      style: OlStyleFactory.getInstance(lConf.style),
+      columnMapping: lConf.columnMapping,
+      hoverable: lConf.hoverable,
+      hoverAttribute: lConf.hoverAttribute,
+      hoverOverlay: lConf.hoverOverlay
     });
 
     return vector;
@@ -201,16 +258,12 @@ export const LayerFactory = {
    */
   createXyzLayer (lConf) {
     const xyzLayer = new TileLayer({
-      name: lConf.name,
-      lid: lConf.lid,
-      displayInLayerList: lConf.displayInLayerList,
-      visible: lConf.visible,
-      opacity: lConf.opacity,
+      ...this.getCommonLayerOptions(lConf),
       source: new XyzSource({
         url: lConf.url,
-        attributions: lConf.attributions,
         tileGrid: lConf.tileGrid,
-        projection: lConf.projection
+        projection: lConf.projection,
+        crossOrigin: lConf.crossOrigin
       })
     });
 
@@ -225,12 +278,10 @@ export const LayerFactory = {
    */
   createOsmLayer (lConf) {
     const layer = new TileLayer({
-      name: lConf.name,
-      lid: lConf.lid,
-      displayInLayerList: lConf.displayInLayerList,
-      visible: lConf.visible,
-      opacity: lConf.opacity,
-      source: new OsmSource()
+      ...this.getCommonLayerOptions(lConf),
+      source: new OsmSource({
+        crossOrigin: lConf.crossOrigin
+      })
     });
 
     return layer;
@@ -244,20 +295,16 @@ export const LayerFactory = {
    */
   createVectorLayer (lConf) {
     const vectorLayer = new VectorLayer({
-      name: lConf.name,
-      lid: lConf.lid,
-      displayInLayerList: lConf.displayInLayerList,
-      extent: lConf.extent,
-      visible: lConf.visible,
-      opacity: lConf.opacity,
+      ...this.getCommonLayerOptions(lConf),
       source: new VectorSource({
         url: lConf.url,
-        format: new this.formatMapping[lConf.format](lConf.formatConfig),
-        attributions: lConf.attributions
+        format: new this.formatMapping[lConf.format](lConf.formatConfig)
       }),
       style: OlStyleFactory.getInstance(lConf.style),
+      columnMapping: lConf.columnMapping,
       hoverable: lConf.hoverable,
-      hoverAttribute: lConf.hoverAttribute
+      hoverAttribute: lConf.hoverAttribute,
+      hoverOverlay: lConf.hoverOverlay
     });
 
     return vectorLayer;
@@ -271,21 +318,17 @@ export const LayerFactory = {
    */
   createVectorTileLayer (lConf) {
     const vtLayer = new VectorTileLayer({
-      name: lConf.name,
-      lid: lConf.lid,
-      displayInLayerList: lConf.displayInLayerList,
-      visible: lConf.visible,
-      opacity: lConf.opacity,
+      ...this.getCommonLayerOptions(lConf),
       source: new VectorTileSource({
         url: lConf.url,
         format: new this.formatMapping[lConf.format](),
-        attributions: lConf.attributions,
         tileGrid: lConf.tileGrid,
         projection: lConf.projection
       }),
       style: OlStyleFactory.getInstance(lConf.style),
       hoverable: lConf.hoverable,
-      hoverAttribute: lConf.hoverAttribute
+      hoverAttribute: lConf.hoverAttribute,
+      hoverOverlay: lConf.hoverOverlay
     });
 
     return vtLayer;

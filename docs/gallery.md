@@ -2,6 +2,27 @@
 
 A list of existing Wegue projects.
 
+
+## [SAUBER time viewer](https://sauber-projekt.meggsimum.de/wms-time-viewer/)
+
+A webmap within the [SAUBER project](https://sauber-projekt.de/de/home/) that displays time based geodata (WMS and WFS). The time can be configured via a clock widget, a calender widget and a slider which has an autoplay functionality. Currently shown raster images can be downloaded using the WCS standard.
+
+![](_media/screenshot_sauber_time.jpg)
+
+## [SAUBER station viewer](https://sauber-projekt.meggsimum.de/station-viewer/)
+
+A webmap within the [SAUBER project](https://sauber-projekt.de/de/home/) that displays measurement stations. Each station measures up to four different pollutants which is reflected in the layer styling by using OpenLayer's point cluster rendering. A click on the desired pollutant opens an info window with available metadata and a photo of the measurement station.
+
+![](_media/screenshot_sauber_station.jpg)
+
+## [Businesses in Mutterstadt](https://gewerbekarte.meggsimum.de/mutterstadt/)
+
+[Source Code](https://github.com/meggsimum/gewerbekarte-mutterstadt)
+
+A map displaying businesses in the municipality Mutterstadt in Rhineland-Palatinate. The styling is done by category using OpenLayer's style function. By hovering over a point, a label with its name will be displayed. A click on a point opens an info window.
+
+![screenshot business map](_media/screenshot_gewerbekarte.jpg)
+
 ---
 
 ## [Time-Travel through Rhineland-Palatinate](https://apps.meggsimum.de/wegue-demos/rlp-historische-tk/?year=1960)

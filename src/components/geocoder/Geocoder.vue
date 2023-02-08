@@ -1,55 +1,66 @@
 <template>
-<v-toolbar-items>
-    <v-combobox
-      class="wgu-geocoder-combo"
-      :style='{ display: (hideSearch ? "none" : "block" ) }'
-      return-object
-      :no-filter="noFilter"
-      v-model="selected"
-      :autofocus="autofocus"
-      :items="resultItems"
-      :label="placeHolder"
-      :clearable="clearable"
-      :dark="dark"
-      :color="dark ? 'white': ''"
-      :persistent-hint="persistentHint"
-      :hidden="hideSearch"
-      :rounded="rounded"
-      :search-input.sync="search"
-    ></v-combobox>
+<v-toolbar-items class="d-flex align-center justify-center">
+  <v-combobox
+    v-show="!hideSearch"
+    class="wgu-geocoder-combo wgu-solo-field"
+    outlined
+    dense
+    color="accent"
+    :dark="isPrimaryDark"
+    filled
+    return-object
+    hide-details
+    :no-filter="noFilter"
+    v-model="selected"
+    :autofocus="autofocus"
+    :items="resultItems"
+    :label="$t('wgu-geocoder.placeHolder')"
+    :clearable="clearable"
+    :persistent-hint="persistentHint"
+    :hidden="hideSearch"
+    :rounded="rounded"
+    :search-input.sync="search"
+  ></v-combobox>
 
-  <v-toolbar-items>
+  <div>
 
-    <v-btn @click='toggle()' icon :dark="dark" >
-      <v-icon medium>{{buttonIcon}}</v-icon>
+    <v-btn @click='toggle()'
+      color="onprimary"
+      icon
+      :title="$t('wgu-geocoder.title')">
+      <v-icon medium>{{icon}}</v-icon>
     </v-btn>
 
-  </v-toolbar-items>
-  </v-toolbar-items>
-
-
+  </div>
+</v-toolbar-items>
 </template>
 
 <script>
-  import {Mapable} from '../../mixins/Mapable';
-  import {GeocoderController} from './GeocoderController';
-  import {applyTransform} from 'ol/extent';
-  import {getTransform, fromLonLat} from 'ol/proj';
+  import { Mapable } from '../../mixins/Mapable';
+  import { ColorTheme } from '../../mixins/ColorTheme';
+  import { GeocoderController } from './GeocoderController';
+  import { applyTransform } from 'ol/extent';
+  import { getTransform, fromLonLat } from 'ol/proj';
+  import ViewAnimationUtil from '../../util/ViewAnimation';
 
   export default {
     name: 'wgu-geocoder-input',
-    mixins: [Mapable],
+    mixins: [Mapable, ColorTheme],
     props: {
-      buttonIcon: {type: String, required: false, default: 'search'},
-      rounded: {type: Boolean, required: false, default: true},
-      autofocus: {type: Boolean, required: false, default: true},
-      clearable: {type: Boolean, required: false, default: true},
-      dark: {type: Boolean, required: false, default: false},
-      persistentHint: {type: Boolean, required: false, default: true}
+      icon: { type: String, required: false, default: 'search' },
+      rounded: { type: Boolean, required: false, default: true },
+      autofocus: { type: Boolean, required: false, default: true },
+      clearable: { type: Boolean, required: false, default: true },
+      persistentHint: { type: Boolean, required: false, default: true },
+      debug: { type: Boolean, required: false, default: false },
+      minChars: { type: Number, required: false, default: 3 },
+      queryDelay: { type: Number, required: false, default: 300 },
+      provider: { type: String, required: false, default: 'osm' },
+      providerOptions: { type: Object, required: false, default: function () { return {}; } }
+
     },
     data () {
       return {
-        placeHolder: '',
         results: [],
         lastQueryStr: '',
         noFilter: true,
@@ -71,7 +82,7 @@
         // Convert results to v-combobox (text, value) Items
         this.results.forEach(result => {
           this.trace(`add to this.items: ${result.address.name}`);
-          items.push({text: result.address.name, value: result});
+          items.push({ text: result.address.name, value: result });
         });
 
         return items;
@@ -156,36 +167,17 @@
           // Result with bounding box.
           // bbox is in EPSG:4326, needs to be transformed to Map Projection (e.g. EPSG:3758)
           const extent = applyTransform(result.boundingbox, getTransform('EPSG:4326', mapProjection));
-          this.map.getView().fit(extent);
+          ViewAnimationUtil.to(this.map.getView(), extent);
         } else {
           // No bbox in result: center on lon/lat from result and zoom in
-          this.map.getView().setZoom(this.selectZoom);
+          ViewAnimationUtil.to(this.map.getView(), coords);
         }
-        this.map.getView().setCenter(coords);
         this.selecting = false;
       }
     },
     mounted () {
-      let config = this.$appConfig.modules['wgu-geocoder'] || {};
-      this.debug = config.debug || false;
-      this.minChars = config.minChars || 3;
-      this.queryDelay = config.queryDelay || 300;
-      this.selectZoom = config.selectZoom || 16;
-      this.placeHolder = config.placeHolder || 'Search for an address';
-
       // Setup GeocoderController to which we delegate Provider and query-handling
-      this.geocoderController = new GeocoderController(config.provider || 'osm', config.providerOptions || {}, this)
+      this.geocoderController = new GeocoderController(this.provider, this.providerOptions, this);
     }
   }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
-
-  .v-input.wgu-geocoder-combo {
-    /* have to be reset here since .v-toolbar .v-input overwrites this */
-    padding-top: 12px;
-    margin-top: 4px;
-  }
-
-</style>

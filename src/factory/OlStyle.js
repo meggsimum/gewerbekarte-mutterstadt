@@ -22,7 +22,7 @@ export const OlStyleFactory = {
     let style;
     if (!styleConf) {
       return;
-    } else if (styleConf.radius || styleConf.iconUrl) {
+    } else if (styleConf.radius || styleConf.iconUrl || styleConf.textIcon) {
       style = OlStyleFactory.createPointStyle(styleConf);
     } else if (styleConf.fillColor) {
       style = OlStyleFactory.createPolygonStyle(styleConf);
@@ -57,12 +57,20 @@ export const OlStyleFactory = {
           anchorYUnits: styleConf.iconAnchorYUnits
         }))
       })
-    } else {
+    } else if (styleConf.radius) {
       pointStyle = new Style({
         image: new CircleStyle({
           radius: styleConf.radius,
           fill: OlStyleFactory.createFill(styleConf),
           stroke: OlStyleFactory.createStroke(styleConf)
+        })
+      });
+    } else {
+      pointStyle = new Style({
+        text: new Text({
+          text: styleConf.textIcon,
+          font: styleConf.font || 'normal 30px Material Icons',
+          fill: OlStyleFactory.createFill(styleConf)
         })
       });
     }
@@ -132,7 +140,7 @@ export const OlStyleFactory = {
     // create a clone to avoid unwanted in place modification
     const textConf = { ...labelConf };
 
-    textConf.fill = new Fill({color: textConf.fillColor});
+    textConf.fill = new Fill({ color: textConf.fillColor });
     textConf.stroke = new Stroke({
       color: textConf.outlineColor,
       width: textConf.outlineWidth

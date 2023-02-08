@@ -1,5 +1,11 @@
 import Vue from 'vue'
+import { shallowMount } from '@vue/test-utils';
 import AppFooter from 'APP/components/AppFooter'
+
+const footerProps = {
+  footerTextLeft: 'my-text-left',
+  footerTextRight: 'my-text-right'
+}
 
 describe('AppFooter.vue', () => {
   // Inspect the raw component options
@@ -7,18 +13,21 @@ describe('AppFooter.vue', () => {
     expect(typeof AppFooter).to.not.equal('undefined');
   });
 
-  it('has the correct properties', () => {
-    // Extend the component to get the constructor, which we can then
-    // initialize directly.
-    const Constructor = Vue.extend(AppFooter);
-    const comp = new Constructor({
-      // Props are passed in "propsData"
-      propsData: {}
-    }).$mount();
+  describe('props', () => {
+    let comp;
+    beforeEach(() => {
+      Vue.prototype.$appConfig = { modules: {} };
+      comp = shallowMount(AppFooter, {
+        propsData: footerProps
+      });
+    });
 
-    expect(comp.color).to.equal('red darken-3');
-    expect(comp.footerTextLeft).to.equal('Powered by <a href="https://meggsimum.de/wegue/" target="_blank">Wegue WebGIS</a>');
-    expect(comp.footerTextRight).to.equal('meggsimum');
-    expect(comp.showCopyrightYear).to.equal(true);
+    it('has correct default props', () => {
+      expect(comp.vm.showCopyrightYear).to.equal(true);
+    });
+
+    afterEach(() => {
+      comp.destroy();
+    });
   });
 });

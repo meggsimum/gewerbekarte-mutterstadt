@@ -1,11 +1,11 @@
 <template>
 
-  <v-btn-toggle v-model="measureTypeData" mandatory>
+  <v-btn-toggle color="secondary"  v-model="measureTypeData" mandatory>
      <v-btn large value="distance">
-       Distance
+       {{ $t("wgu-measuretool.distance") }}
      </v-btn>
      <v-btn large value="area">
-       Area
+       {{ $t("wgu-measuretool.area") }}
      </v-btn>
    </v-btn-toggle>
 
@@ -15,7 +15,7 @@
   export default {
     name: 'wgu-measure-type-chooser',
     props: {
-      measureType: {type: String, default: 'distance'}
+      measureType: { type: String, default: 'distance' }
     },
     data () {
       return {

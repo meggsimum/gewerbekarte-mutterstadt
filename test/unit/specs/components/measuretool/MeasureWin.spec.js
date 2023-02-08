@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import MeasureWin from '@/components/measuretool/MeasureWin';
 import OlMap from 'ol/Map';
 import LineStringGeom from 'ol/geom/LineString';
@@ -11,90 +11,55 @@ describe('measuretool/MeasureWin.vue', () => {
   describe('props', () => {
     let comp;
     beforeEach(() => {
-      comp = shallowMount(MeasureWin);
+      comp = mount(MeasureWin);
     });
 
     it('has correct default props', () => {
-      expect(comp.vm.color).to.equal('red darken-3');
       expect(comp.vm.icon).to.equal('photo_size_select_small');
-      expect(comp.vm.title).to.equal('Measure');
-      expect(comp.vm.draggable).to.equal(true);
-      expect(comp.vm.initPos).to.equal(undefined);
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 
   describe('data', () => {
     let comp;
     beforeEach(() => {
-      comp = shallowMount(MeasureWin);
+      comp = mount(MeasureWin);
     });
 
     it('has correct default data', () => {
       expect(comp.vm.moduleName).to.equal('wgu-measuretool');
       expect(comp.vm.measureGeom).to.equal(null);
       expect(comp.vm.measureType).to.equal('distance');
-      expect(comp.vm.show).to.equal(false);
-      expect(comp.vm.left).to.equal('0');
-      expect(comp.vm.top).to.equal('0');
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 
-  describe('watchers', () => {
+  describe('watchers - measureType', () => {
     let comp;
     let vm;
     beforeEach(() => {
-      comp = shallowMount(MeasureWin);
+      comp = mount(MeasureWin);
       vm = comp.vm;
     });
 
-    it('watches show setting to false', done => {
-      let cnt = 0;
-      let mockFn = () => {
-        cnt++;
-      };
-      vm.$appConfig = {modules: {}};
-
-      const map = new OlMap({});
-      vm.map = map;
-      vm.onMapBound();
-      vm.olMapCtrl.removeInteraction = mockFn;
-      // toggle to trigger the watcher
-      vm.show = true;
-      vm.$nextTick(() => {
-        expect(cnt).to.equal(0);
-        done();
-      });
-      vm.show = false;
-      vm.$nextTick(() => {
-        expect(cnt).to.equal(1);
-        done();
-      });
-    });
-
-    it('watches show setting to true', done => {
-      let cnt = 0;
-      let mockFn = () => {
-        cnt++;
-      };
-      vm.$appConfig = {modules: {}};
-
-      const map = new OlMap({});
-      vm.map = map;
-      vm.onMapBound();
-      vm.olMapCtrl.addInteraction = mockFn;
-      vm.show = true;
-      vm.$nextTick(() => {
-        expect(cnt).to.equal(1);
-        done();
-      });
-    });
-
     it('watches measureType resets old data', done => {
+      vm.map = new OlMap({});
+      vm.onMapBound();
       vm.measureType = 'area';
       vm.$nextTick(() => {
         expect(vm.measureGeom).to.be.an('object').that.is.empty;
         done();
       })
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 
@@ -102,8 +67,37 @@ describe('measuretool/MeasureWin.vue', () => {
     let comp;
     let vm;
     beforeEach(() => {
-      comp = shallowMount(MeasureWin);
+      comp = mount(MeasureWin);
       vm = comp.vm;
+    });
+
+    it('show resets map interaction when module is closed', () => {
+      let cnt = 0;
+      let mockFn = () => {
+        cnt++;
+      };
+
+      vm.map = new OlMap({});
+      vm.onMapBound();
+      vm.olMapCtrl.removeInteraction = mockFn;
+
+      vm.show(true);
+      vm.show(false);
+      expect(cnt).to.equal(1);
+    });
+
+    it('show registers map interaction when module is opened', () => {
+      let cnt = 0;
+      let mockFn = () => {
+        cnt++;
+      };
+      vm.map = new OlMap({});
+      vm.onMapBound();
+      vm.olMapCtrl.addInteraction = mockFn;
+
+      vm.show(false);
+      vm.show(true);
+      expect(cnt).to.equal(1);
     });
 
     it('are implemented', () => {
@@ -120,6 +114,10 @@ describe('measuretool/MeasureWin.vue', () => {
       const lineGeom = new LineStringGeom([[0, 0], [1000, 0], [1000, 1000], [0, 1000]]);
       vm.onMeasureVertexSet(lineGeom);
       expect(vm.measureGeom.geom).to.equal(lineGeom);
+    });
+
+    afterEach(() => {
+      comp.destroy();
     });
   });
 });

@@ -29,14 +29,14 @@ describe('DraggableWin Directive', () => {
   describe('functions', () => {
     describe('bind', () => {
       it('exits if binding.value=false', () => {
-        DraggableWin.bind(null, {value: false});
+        DraggableWin.bind(null, { value: false });
         expect(DraggableWin.dragConfig.draggableElementSelector).to.equal(null);
       });
 
       it('exits if no header in elem', () => {
         const mockDomEl = document.createElement('div');
 
-        DraggableWin.bind(mockDomEl, {value: true});
+        DraggableWin.bind(mockDomEl, { value: true });
         expect(DraggableWin.dragConfig.draggableElementSelector).to.equal(null);
       });
 
@@ -46,7 +46,7 @@ describe('DraggableWin Directive', () => {
         mockHeaderEl.classList.add('wgu-win-title');
         mockDomEl.append(mockHeaderEl);
 
-        DraggableWin.bind(mockDomEl, {arg: false, value: true});
+        DraggableWin.bind(mockDomEl, { arg: false, value: true });
         expect(DraggableWin.dragConfig.draggableElementSelector).to.equal('wgu-win-title');
         // cleanup
         mockHeaderEl.parentNode.removeChild(mockHeaderEl);
@@ -58,7 +58,7 @@ describe('DraggableWin Directive', () => {
         mockHeaderEl.classList.add('wgu-win-title');
         mockDomEl.append(mockHeaderEl);
 
-        DraggableWin.bind(mockDomEl, {arg: 'kalle', value: true});
+        DraggableWin.bind(mockDomEl, { arg: 'kalle', value: true });
         expect(DraggableWin.dragConfig.draggableElementSelector).to.equal('kalle');
         // cleanup
         mockHeaderEl.parentNode.removeChild(mockHeaderEl);
@@ -74,7 +74,7 @@ describe('DraggableWin Directive', () => {
         mockHeaderEl.classList.add('wgu-win-title');
         mockDomEl.append(mockHeaderEl);
 
-        DraggableWin.bind(mockDomEl, {arg: false, value: true});
+        DraggableWin.bind(mockDomEl, { arg: false, value: true });
 
         let cnt = 0;
         DraggableWin.mouseup = () => {
@@ -96,7 +96,7 @@ describe('DraggableWin Directive', () => {
         mockHeaderEl.classList.add('wgu-win-title');
         mockDomEl.append(mockHeaderEl);
 
-        DraggableWin.bind(mockDomEl, {arg: false, value: true});
+        DraggableWin.bind(mockDomEl, { arg: false, value: true });
 
         let cnt = 0;
         DraggableWin.mousedown = () => {
@@ -118,7 +118,7 @@ describe('DraggableWin Directive', () => {
         mockHeaderEl.classList.add('wgu-win-title');
         mockDomEl.append(mockHeaderEl);
 
-        DraggableWin.bind(mockDomEl, {arg: false, value: true});
+        DraggableWin.bind(mockDomEl, { arg: false, value: true });
 
         let cnt = 0;
         DraggableWin.mousemove = () => {
@@ -136,7 +136,7 @@ describe('DraggableWin Directive', () => {
 
   // it('getInstance returns correct instance', () => {
   //   let layerConf = {
-  //     type: 'WMS'
+  //     type: 'TILEWMS'
   //   };
   //   const style = LayerFactory.getInstance(layerConf);
   //   expect((style instanceof TileLayer)).to.equal(true);
@@ -152,14 +152,13 @@ describe('DraggableWin Directive', () => {
   // describe('layer types', () => {
   //   it('createWmsLayer returns correct layer instance', () => {
   //     const layerConf = {
-  //       'type': 'WMS',
+  //       'type': 'TILEWMS',
   //       'lid': 'ahocevar-wms',
   //       'name': 'WMS (ahocevar)',
   //       'format': 'image/png',
   //       'layers': 'topp:states',
   //       'url': 'https://ahocevar.com/geoserver/wms',
   //       'transparent': true,
-  //       'singleTile': false,
   //       'projection': 'EPSG:3857',
   //       'attribution': '',
   //       'isBaseLayer': false,
@@ -210,7 +209,6 @@ describe('DraggableWin Directive', () => {
   //       },
   //       'format': 'KML',
   //       'visible': true,
-  //       'attributions': 'U.S. Geological Survey',
   //       'selectable': true,
   //       'hoverable': true,
   //       'hoverAttribute': 'name'
