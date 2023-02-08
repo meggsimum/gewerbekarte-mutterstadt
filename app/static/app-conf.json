@@ -1,22 +1,30 @@
 {
-
-  "title": "Mutterstadt Gewerbe",
-
-  "baseColor": "#89A5D8",
-
+  "colorTheme": {
+    "dark": false,
+    "themes": {
+      "light": {
+        "primary": "#89A5D8",
+        "onprimary": "#FFFFFF",
+        "onsecondary": "#FFFFFF"
+      }
+    }
+  },
+  "lang": {
+    "supported": {
+      "de": "Deutsch"
+    },
+    "fallback": "de"
+  },
   "logo": "./static/img/meggsimum_logo.png",
   "logoWidth": "100",
   "logoHeight": "100",
-
-  "footerTextLeft": "Powered by <a href='https://meggsimum.de/wegue/' target='_blank'>Wegue WebGIS</a>",
-  "footerTextRight": "<a href='https://meggsimum.de/impressum/' target='_blank'>meggsimum</a>",
   "showCopyrightYear": true,
-
   "mapZoom": 14,
-  "mapCenter": [930473.6,6348916.5],
-
+  "mapCenter": [
+    930473.6,
+    6348916.5
+  ],
   "mapLayers": [
-
     {
       "type": "VECTOR",
       "lid": "gewerbe",
@@ -24,7 +32,10 @@
       "url": "./static/data/gewerbe.geojson",
       "format": "GeoJSON",
       "visible": true,
-      "selectable": true,
+      "selectable_COMMENT": "We intentionally set 'selectable' to false, because we use our custom selection logic.",
+      "selectable": false,
+      "hoverable": true,
+      "hoverAttribute": "title",
       "attributions": "Gewerbedaten von <a href='http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/'>mutterstadt.de</a>"
     },
     {
@@ -37,22 +48,17 @@
       "attributions": "Maps: © <a href='https://carto.com/attribution/' target='_blank'>CARTO</a> | <a href='https://openstreetmap.org/copyright' target='_blank'>© OpenStreetMap</a>-contributors | "
     }
   ],
-
   "modules": {
     "wgu-zoomtomaxextent": {
-      "target": "toolbar",
-      "darkLayout": true
+      "target": "toolbar"
     },
     "wgu-geolocator": {
-      "target": "toolbar",
-      "darkLayout": true
+      "target": "toolbar"
     },
     "wgu-helpwin": {
       "target": "toolbar",
-      "darkLayout": true, 
-      "windowTitle": "Info",
-      "textTitle": "Gewerbe in Mutterstadt",
-      "htmlContent": "Diese Anwendung stellt die auf der Webseite von <a href=\"http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/\">Mutterstadt</a> aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf ein Gewerbesymbol wird eine Beschreibung eingeblendet. <br><br>Es handelt sich <b>nicht</b> um eine offizielle Anwendung der Gemeinde Mutterstadt.<br><br>Es besteht keine Gewähr für Korrektheit oder Vollständigkeit.<br><br>Bei Fragen oder Anregungen kontaktieren Sie uns <a href=\"mailto:info@meggsimum.de?subject=Gewerbekarte Mutterstadt\">per Mail</a>."
+      "win": "floating",
+      "icon": "help"
     }
   }
 }

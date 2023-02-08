@@ -1,6 +1,8 @@
 <template>
 <span>
-   <v-btn @click="geolocateUserAndShowMarkerOnMap" icon dark>
+   <v-btn @click="geolocateUserAndShowMarkerOnMap" icon
+      color="onprimary"
+      :title="$t('wgu-geolocator.title')">
       <v-icon v-if='this.isSearchingForGeolocation'>update</v-icon>
       <v-icon v-else-if='this.isGeolocationAPIAvailable && (!this.isGeolocationFound)'>location_searching</v-icon>
       <v-icon v-else-if='this.isGeolocationAPIAvailable && this.isGeolocationFound'>gps_fixed</v-icon>
@@ -10,23 +12,21 @@
 </template>
 
 <script>
-import {fromLonLat} from 'ol/proj'
+import { fromLonLat } from 'ol/proj'
 import Point from 'ol/geom/Point'
 import Feature from 'ol/Feature';
-import {Vector as VectorLayer} from 'ol/layer'
-import {Vector as VectorSource} from 'ol/source'
+import { Vector as VectorLayer } from 'ol/layer'
+import { Vector as VectorSource } from 'ol/source'
 import { Fill, Style, Text } from 'ol/style';
 
 import { WguEventBus } from '../../WguEventBus'
+import ViewAnimationUtil from '../../util/ViewAnimation';
 
 export default {
   name: 'wgu-geolocator',
   props: {
-    zoomAnimation: {type: Boolean, required: false, default: true},
-    zoomAnimationDuration: {type: Number, required: false, default: 2400},
-    maxZoom: {type: Number, required: false, default: 15},
-    markerColor: {type: String, required: false, default: 'blue'},
-    markerText: {type: String, required: false, default: 'person_pin_circle'}
+    markerColor: { type: String, required: false, default: 'blue' },
+    markerText: { type: String, required: false, default: 'person_pin_circle' }
   },
   data: function () {
     return {
@@ -67,7 +67,7 @@ export default {
         source: new VectorSource(),
         style: this.geolocationMarker
       });
-      layer.setProperties({lid: layerId, name: 'Current Position'});
+      layer.setProperties({ lid: layerId });
       return layer;
     },
 
@@ -89,20 +89,12 @@ export default {
             this.isGeolocationFound = true;
             this.isSearchingForGeolocation = false;
             // get a layer to draw the current position on
-            const geolocLayer = this.createAndRemoveExistingLayer(this.map.getLayers(), 'userPosition');
-            geolocLayer.getSource().addFeature(new Feature({geometry: currentPosGeom}));
+            const geolocLayer = this.createAndRemoveExistingLayer(this.map.getLayers(), 'wgu-geolocator-layer');
+            geolocLayer.getSource().addFeature(new Feature({ geometry: currentPosGeom }));
             this.map.addLayer(geolocLayer);
 
-            // collect zooming options
-            const zoomOpts = {
-              maxZoom: this.maxZoom,
-              padding: [50, 50, 50, 50]
-            };
-            if (this.zoomAnimation) {
-              zoomOpts.duration = this.zoomAnimationDuration;
-            }
             // zoom to geolocation position
-            this.map.getView().fit(currentPosGeom, zoomOpts);
+            ViewAnimationUtil.to(this.map.getView(), currentPosGeom);
           } else {
             console.error('The map is not defined in the getCurrentPosition callback');
           }
@@ -116,7 +108,7 @@ export default {
           this.isGeolocationAPIAvailable = false;
           this.isSearchingForGeolocation = false;
         },
-        {enableHighAccuracy: true, maximumAge: 60000, timeout: 27000})
+        { enableHighAccuracy: true, maximumAge: 60000, timeout: 27000 })
       } else {
         this.isGeolocationAPIAvailable = false;
       }

@@ -3,7 +3,7 @@
 
     <slot name="wgu-app-begin" />
 
-    <wgu-app-header :color="baseColor">
+    <wgu-app-header>
       <!-- forward the slots of AppHeader -->
       <slot name="wgu-tb-start" slot="wgu-tb-start" />
       <slot name="wgu-tb-after-title" slot="wgu-tb-after-title" />
@@ -14,38 +14,53 @@
 
     <slot name="wgu-after-header" />
 
-    <wgu-app-logo />
+    <wgu-app-sidebar v-if="sidebarWins.length" v-bind="sidebarConfig">
+        <template v-for="(moduleWin, index) in sidebarWins">
+          <component
+            :is="moduleWin.type" :key="index"
+            v-bind="moduleWin"
+          />
+      </template>
+    </wgu-app-sidebar>      
 
     <slot name="wgu-before-content" />
-
-    <v-content>
-      <v-container id="ol-map-container" fluid fill-height style="padding: 0">
-         <wgu-map :color="baseColor" />
-         <!-- layer loading indicator -->
-         <wgu-maploading-status :color="baseColor" />
-         <slot name="wgu-after-map" />
+    <v-content app>
+      <v-container id="ol-map-container" fluid fill-height class="pa-0">
+        <wgu-map />
+        <!-- layer loading indicator -->
+        <wgu-maploading-status />
+        <slot name="wgu-after-map"> 
+        </slot>
+        <!-- Portal to overlay the map content from an application module -->
+        <portal-target name="map-overlay" />
+        <wgu-app-logo />
+        <wgu-bglayerswitcher />
+        <wgu-overviewmap v-if="overviewMapConfig" v-bind="overviewMapConfig"/>
+        <!-- Register custom overlays, e.g. feature hover components here -->
+        <wgu-hover-tooltip />
       </v-container>
     </v-content>
 
-    <template v-for="(moduleWin, index) in moduleWins">
+    <template v-for="(moduleWin, index) in floatingWins">
       <component
-        :is="moduleWin.type" :key="index" :ref="moduleWin.type"
-        :color="baseColor"
-        :draggable="moduleWin.draggable"
-        :initPos="moduleWin.initPos"
+        :is="moduleWin.type" :key="index"
+        v-bind="moduleWin"
       />
     </template>
 
     <slot name="wgu-before-footer" />
 
     <wgu-app-footer
-      :color="baseColor"
-      :footerTextLeft="footerTextLeft"
-      :footerTextRight="footerTextRight"
+      :footerTextLeft="$t('app.footerTextLeft')"
+      :footerTextRight="$t('app.footerTextRight')"
       :showCopyrightYear="showCopyrightYear"
     />
 
     <slot name="wgu-after-footer" />
+
+    <!-- app wide loading mask,
+    use WguEventBus.$emit('app-loading-mask-toggle', newViz) to show/hide -->
+    <wgu-app-loading-mask />
 
     <slot name="wgu-app-end" />
 
@@ -56,35 +71,56 @@
   import Vue from 'vue'
   import { WguEventBus } from '../src/WguEventBus'
   import OlMap from '../src/components/ol/Map'
+  import HoverTooltip from '../src/components/ol/HoverTooltip'
   import AppHeader from './components/AppHeader'
   import AppFooter from './components/AppFooter'
+  import AppSidebar from './components/AppSidebar'
   import AppLogo from '../src/components/AppLogo'
+  import AppLoadingMask from '../src/components/AppLoadingMask'
+  import BgLayerSwitcher from '../src/components/bglayerswitcher/BgLayerSwitcher.vue'
+  import OverviewMap from '../src/components/overviewmap/OverviewMap.vue'
   import MeasureWin from '../src/components/measuretool/MeasureWin'
   import LayerListWin from '../src/components/layerlist/LayerListWin'
+  import HelpWin from '../src/components/helpwin/HelpWin'
   import InfoClickWin from '../src/components/infoclick/InfoClickWin'
   import MapLoadingStatus from '../src/components/progress/MapLoadingStatus'
+  import AttributeTableWin from '../src/components/attributeTable/AttributeTableWin.vue'
+  import MapRecorderWin from '../src/components/maprecorder/MapRecorderWin'
+  import SampleModuleWin from './components/SampleModule.vue'
 
   export default {
     name: 'wgu-app-tpl',
     components: {
       'wgu-map': OlMap,
+      'wgu-hover-tooltip': HoverTooltip,
       'wgu-app-header': AppHeader,
       'wgu-app-footer': AppFooter,
+      'wgu-app-sidebar': AppSidebar,
       'wgu-app-logo': AppLogo,
+      'wgu-app-loading-mask': AppLoadingMask,
+      'wgu-bglayerswitcher': BgLayerSwitcher,
+      'wgu-overviewmap': OverviewMap,
       'wgu-measuretool-win': MeasureWin,
       'wgu-layerlist-win': LayerListWin,
+      'wgu-helpwin-win': HelpWin,
       'wgu-infoclick-win': InfoClickWin,
-      'wgu-maploading-status': MapLoadingStatus
+      'wgu-maploading-status': MapLoadingStatus,
+      'wgu-attributetable-win': AttributeTableWin,
+      'wgu-maprecorder-win': MapRecorderWin,
+      'sample-module-win': SampleModuleWin
     },
     data () {
       return {
         isEmbedded: false,
-        moduleWins: this.getModuleWinData(),
-        footerTextLeft: Vue.prototype.$appConfig.footerTextLeft,
-        footerTextRight: Vue.prototype.$appConfig.footerTextRight,
-        showCopyrightYear: Vue.prototype.$appConfig.showCopyrightYear,
-        baseColor: Vue.prototype.$appConfig.baseColor
+        sidebarConfig: this.getSidebarConfig(),
+        overviewMapConfig: this.getOverviewMapConfig(),
+        floatingWins: this.getModuleWinData('floating'),
+        sidebarWins: this.getModuleWinData('sidebar'),
+        showCopyrightYear: Vue.prototype.$appConfig.showCopyrightYear
       }
+    },
+    created () {
+      this.setDocumentTitle();
     },
     mounted () {
       // apply the isEmbedded state to the member var
@@ -104,28 +140,58 @@
     },
     methods: {
       /**
+       * Returns the configuration object for the sidebar from app-config.
+       * @return {Object} Sidebar configuration object.
+       */
+      getSidebarConfig () {
+        const appConfig = Vue.prototype.$appConfig || {};
+        return appConfig['sidebar'];
+      },
+      /**
+       * Returns the configuration object for the overview map from app-config.
+       * @return {Object} Overview map configuration object.
+       */
+      getOverviewMapConfig () {
+        const appConfig = Vue.prototype.$appConfig || {};
+        return appConfig['overviewMap'];
+      },
+      /**
        * Determines the module window configuration objects from app-config:
        *     moduleWins: [
        *       {type: 'wgu-layerlist-win'},
        *       {type: 'wgu-measuretool-win'}
        *     ]
+       * @param  {String} target Either 'floating' or 'sidebar'
        * @return {Array} module window configuration objects
        */
-      getModuleWinData () {
+      getModuleWinData (target) {
         const appConfig = Vue.prototype.$appConfig || {};
         const modulesConfs = appConfig.modules || {};
         let moduleWins = [];
         for (const key of Object.keys(modulesConfs)) {
           const moduleOpts = appConfig.modules[key];
-          if (moduleOpts.win === true) {
+          if (moduleOpts.win === target) {
             moduleWins.push({
               type: key + '-win',
-              draggable: moduleOpts.draggable,
-              initPos: moduleOpts.initPos
+              ...moduleOpts
             });
           }
         }
         return moduleWins;
+      },
+      /**
+       * Sets the document title from language file.
+       */
+      setDocumentTitle () {
+        document.title = this.$t('app.browserTitle') || document.title;
+      }
+    },
+    watch: {
+      /**
+       * Watch for locale changes.
+       */
+      '$i18n.locale': function () {
+        this.setDocumentTitle();
       }
     }
   }

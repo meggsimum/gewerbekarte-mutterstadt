@@ -1,7 +1,7 @@
 import Projection from 'ol/proj/Projection';
-import {getTransform, transform} from 'ol/proj';
+import { getTransform, transform } from 'ol/proj';
 import UrlUtil from '../../util/Url';
-import {applyTransform} from 'ol/extent';
+import { applyTransform } from 'ol/extent';
 
 /**
  * Class holding the logic for permalinks.
@@ -17,7 +17,7 @@ export default class PermalinkController {
   constructor (map, permalinkConf) {
     this.map = map;
     this.conf = permalinkConf || {};
-    this.projection = this.conf.projection ? new Projection({'code': this.conf.projection}) : null;
+    this.projection = this.conf.projection ? new Projection({ 'code': this.conf.projection }) : null;
     this.conf.paramPrefix = this.conf.paramPrefix || '';
     this.conf.location = this.conf.location || 'hash';
     this.conf.separator = this.conf.location === 'hash' ? '#' : '?';
@@ -57,7 +57,7 @@ export default class PermalinkController {
     // restore the view state when navigating through the history (browser back/forward buttons), see
     // https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onpopstate
     window.addEventListener('popstate', (event) => {
-      if (event.state === null) {
+      if (event.state === null || this.map === null) {
         return;
       }
 
@@ -86,9 +86,20 @@ export default class PermalinkController {
   }
 
   /**
+   * Stop this instance.
+   */
+  tearDown () {
+    this.unsubscribeLayers();
+    this.map = null;
+  }
+
+  /**
    * Subscribe to Layer visibility changes.
    */
   subscribeLayers () {
+    if (!this.map) {
+      return;
+    }
     // First unsubscribe from all
     this.unsubscribeLayers();
 
@@ -97,7 +108,7 @@ export default class PermalinkController {
       const key = layer.on('change:visible', () => {
         this.onMapChange();
       });
-      this.layerListeners.push({'key': key, 'layer': layer});
+      this.layerListeners.push({ 'key': key, 'layer': layer });
     });
   }
 
@@ -105,6 +116,9 @@ export default class PermalinkController {
    * Unsubscribe to Layer visibility changes.
    */
   unsubscribeLayers () {
+    if (!this.map) {
+      return;
+    }
     // Listen to each Layer's visibility changes.
     this.layerListeners.forEach((item) => {
       item.layer.un(item.key.type, item.key.listener)
@@ -247,10 +261,12 @@ export default class PermalinkController {
   }
 
   /**
-   * Get array of visible layer id's.
+   * Get array of visible and not ignored layer IDs.
    */
   getLayerIds () {
-    return this.map.getLayers().getArray().filter(layer => !!layer.get('lid') && layer.getVisible()).map(layer => layer.get('lid'));
+    return this.map.getLayers().getArray().filter(
+      layer => !!layer.get('lid') && layer.getVisible() && layer.get('supportsPermalink')
+    ).map(layer => layer.get('lid'));
   }
 
   /**

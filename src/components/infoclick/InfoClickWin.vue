@@ -1,53 +1,90 @@
 <template>
 
-  <v-card class="wgu-infoclick-win" v-draggable-win="draggable"  v-if=show v-bind:style="{ left: left, top: top }">
-    <v-toolbar :color="color" class="" dark>
-      <v-icon>{{icon}}</v-icon>
-      <v-toolbar-title class="wgu-win-title">{{title}}</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-app-bar-nav-icon @click="show = false"><v-icon>close</v-icon></v-app-bar-nav-icon>
-    </v-toolbar>
-    <v-card-title primary-title class="wgu-infoclick-win-title">
+  <wgu-module-card v-bind="$attrs"
+    :moduleName="moduleName"
+    class="wgu-infoclick-win"
+    :icon="icon"
+    v-on:visibility-change="show">
 
-      <div v-if="!this.attributeData && !this.coordsData" class="no-data">
-        Click on the map to get information for the clicked map position.
-      </div>
+    <!-- Show feature properties and position tables -->
+    <div v-if="!this.showMedia">
 
-      <!-- feature property grid -->
-      <wgu-property-table :properties="attributeData" :color="color" />
+      <v-card-title primary-title class="wgu-infoclick-win-title">
 
-      <!-- click coodinate info grid -->
-      <wgu-coords-table :coordsData="coordsData" :color="color" />
+        <v-card-text v-if="!this.attributeData && !this.coordsData" class="no-data">
+          {{ $t('wgu-infoclick.mapClick') }}
+        </v-card-text>
 
-    </v-card-title>
-  </v-card>
+        <!-- feature property grid -->
+        <wgu-property-table :properties="attributeData" />
 
+        <!-- click coodinate info grid -->
+        <wgu-coords-table :coordsData="coordsData" />
+
+      </v-card-title>
+
+    </div>
+
+    <!-- Show a default image based object info as previously
+         done in FeatureInfoWindow -->
+    <div v-if="this.showMedia">
+
+      <v-card-text v-if="!this.attributeData" class="no-data"> 
+        {{ $t('wgu-infoclick.mediaClick') }}
+      </v-card-text>
+
+      <v-img
+        height="250"
+        v-if="this.attributeData"
+        :src="this.attributeData[this.imageProp]"
+      ></v-img>
+
+      <v-card-text
+        v-if="this.attributeData && this.attributeData[imageDescriptionProp]" >
+        {{this.attributeData[imageDescriptionProp]}}
+      </v-card-text>
+
+      <v-card-actions>
+        <v-btn
+          text color="secondary"
+          v-if="this.attributeData && this.attributeData[mediaInfoLinkUrlProp]"
+          :href="this.attributeData[mediaInfoLinkUrlProp]"
+          target="_blank"
+        >
+          {{ $t('wgu-infoclick.mediaInfoLinkText') || this.attributeData[mediaInfoLinkUrlProp] }}
+        </v-btn>
+      </v-card-actions>
+
+    </div>
+
+   </wgu-module-card>
 </template>
 
 <script>
-
+import ModuleCard from './../modulecore/ModuleCard';
 import { WguEventBus } from '../../WguEventBus.js';
 import PropertyTable from './PropertyTable';
 import CoordsTable from './CoordsTable';
 
 export default {
   name: 'wgu-infoclick-win',
+  inheritAttrs: false,
   components: {
+    'wgu-module-card': ModuleCard,
     'wgu-property-table': PropertyTable,
     'wgu-coords-table': CoordsTable
   },
   props: {
-    color: {type: String, required: false, default: 'red darken-3'},
-    icon: {type: String, required: false, default: 'info'},
-    title: {type: String, required: false, default: 'Map Click Info'},
-    draggable: {type: Boolean, required: false, default: true},
-    initPos: {type: Object, required: false}
+    icon: { type: String, required: false, default: 'info' },
+    showMedia: { type: Boolean, required: false, default: false },
+    // below props only have an effect if showMedia=true
+    mediaInfoLinkUrlProp: { type: String, required: false },
+    imageProp: { type: String, required: false },
+    imageDescriptionProp: { type: String, required: false }
   },
   data: function () {
     return {
-      show: false,
-      left: this.initPos ? this.initPos.left + 'px' : '0',
-      top: this.initPos ? this.initPos.top + 'px' : '0',
+      moduleName: 'wgu-infoclick',
       attributeData: null,
       coordsData: null
     }
@@ -61,9 +98,6 @@ export default {
     });
   },
   methods: {
-    toggleUi () {
-      this.show = !this.show;
-    },
     registerMapClick (unregister) {
       var me = this;
 
@@ -103,12 +137,15 @@ export default {
         coordinate: evt.coordinate,
         projection: me.map.getView().getProjection().getCode()
       };
-    }
-  },
-  watch: {
-    show () {
+    },
+    /**
+     * (Un-)Register map interactions when the visibility of the module changes.
+     *
+     * @param  {boolean} visible New visibility state
+    */
+    show (visible) {
       const me = this;
-      if (this.show === true) {
+      if (visible) {
         me.registerMapClick();
       } else {
         // cleanup old data
@@ -124,13 +161,7 @@ export default {
 <style>
 
   .wgu-infoclick-win {
-    background-color: white;
-    z-index: 2;
     width: 450px;
-  }
-
-  .v-card.wgu-infoclick-win {
-    position: absolute;
   }
 
   .wgu-infoclick-win .v-card__title {
@@ -138,8 +169,12 @@ export default {
   }
 
   @media (max-width: 600px) {
+    /* TODO
+      Generalize the positioning concept for windows,
+      this interferes with positioning and draggable settings in the app.conf */
+
     /* tmp. approach to position on small screens */
-    .v-card.wgu-infoclick-win {
+    .wgu-infoclick-win.wgu-floating {
       /* tmp. fix */
       left: 0 !important;
       top: 40% !important;
@@ -147,7 +182,7 @@ export default {
       max-width: 600px;
     }
 
-    .wgu-infoclick-win-title {
+    .wgu-infoclick-win.wgu-floating > .wgu-infoclick-win-title {
       overflow: scroll;
       max-height: 300px;
     }

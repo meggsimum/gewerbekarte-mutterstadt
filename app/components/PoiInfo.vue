@@ -30,7 +30,7 @@ export default {
     }
   },
   props: {
-    value: {type: Boolean}
+    value: { type: Boolean }
   },
   mounted () {
     var me = this;

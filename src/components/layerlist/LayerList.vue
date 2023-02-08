@@ -1,131 +1,55 @@
 <template>
 
-  <v-list>
-    <v-list-item class="wgu-layerlist-item" v-for="layerItem in layerItems" v-bind:key="layerItem.lid" @click="onItemClick($event, layerItem)">
-      <input type="checkbox" :key="layerItem.lid" class="wgu-layer-viz-cb" v-model="layerItem.visible" @change="layerVizChanged">
-      <v-list-item-content class="black--text">
-          <v-list-item-title>{{ layerItem.title }}</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
-
+  <v-list expand>
+    <wgu-layerlistitem
+      v-for="layer in displayedLayers"
+      :key="layer.get('lid')"
+      :layer="layer"
+      :mapView="map.getView()"
+      :showLegends="showLegends"
+      :showOpacityControls="showOpacityControls"
+    />
+  </v-list> 
 </template>
 
 <script>
   import { Mapable } from '../../mixins/Mapable';
-  import LayerUtil from '../../util/Layer';
-
+  import LayerListItem from './LayerListItem'
+  
   export default {
     name: 'wgu-layerlist',
+    components: {
+      'wgu-layerlistitem': LayerListItem
+    },
     mixins: [Mapable],
     props: {
+      showLegends: { type: Boolean, required: true },
+      showOpacityControls: { type: Boolean, required: true }
     },
     data () {
       return {
-        layerItems: [],
-        changeVisByClickUpdate: false
+        layers: []
       }
     },
     methods: {
       /**
-       * This function is executed, after the map is bound (see mixins/Mapable)
+       * This function is executed, after the map is bound (see mixins/Mapable).
+       * Bind to the layers from the OpenLayers map.
        */
       onMapBound () {
-        var me = this;
-        me.createLayerItems();
-
-        // react on added / removed layers
-        me.map.getLayers().on('change:length', function (evt) {
-          me.createLayerItems();
-        });
-      },
+        this.layers = this.map.getLayers().getArray();
+      }
+    },
+    computed: {
       /**
-       * Creates the layer items from the OpenLayers map.
+       * Reactive property to return the OpenLayers layers to be shown in the control.
+       * Remarks: The 'displayInLayerList' attribute should default to true per convention.
        */
-      createLayerItems () {
-        const me = this;
-        // go over all layers from the map and list them up
-        var layers = this.map.getLayers();
-        // clone to only reverse the order for the list
-        var layerArrClone = layers.getArray().slice(0);
-        layers = layerArrClone.reverse();
-
-        var layerItems = [];
-        layers.forEach(function (layer) {
-          // skip if layer should not be listed
-          if (layer.get('displayInLayerList') === false) {
-            return;
-          }
-          layerItems.push({
-            title: layer.get('name'),
-            lid: layer.get('lid'),
-            visible: layer.getVisible()
-          });
-
-          // synchronize visibility with UI when changed programatically
-          layer.on('change:visible', me.onOlLayerVizChange);
-        });
-
-        me.layerItems = layerItems;
-      },
-
-      /**
-       * Handles the 'change:visible' event of the layer in order to
-       * apply the current visibility state to the corresponding checkbox in
-       * case the 'change:visible' wasn't triggered by click.
-       *
-       * @param  {ol/Object.ObjectEvent} evt The OL event of 'change:visible'
-       */
-      onOlLayerVizChange (evt) {
-        const me = this;
-        if (!me.changeVisByClickUpdate) {
-          me.layerItems.forEach(function (layerItem, idx) {
-            if (layerItem.lid === evt.target.get('lid')) {
-              // execute click handler to change visibility
-              me.onItemClick(null, layerItem);
-            }
-          });
-        }
-      },
-
-      /**
-       * Handler for click on item in layer list:
-       * Toggles the corresponding visibility and calls this.layerVizChanged.
-       *
-       * @param  {Object} ect       Original vue click event
-       * @param  {Object} layerItem Layer item data object
-       */
-      onItemClick (evt, layerItem) {
-        const me = this;
-        layerItem.visible = !layerItem.visible;
-
-        me.changeVisByClickUpdate = true;
-        this.layerVizChanged();
-        me.changeVisByClickUpdate = false;
-      },
-
-      /**
-       * Handles the 'change' event of the visibility checkboxes in order to
-       * apply the current visibility state in 'data' to the OL layers.
-       */
-      layerVizChanged () {
-        var me = this;
-
-        me.layerItems.forEach(function (layerItem, idx) {
-          const layer = LayerUtil.getLayerByLid(layerItem.lid, me.map);
-          if (layer) {
-            layer.setVisible(layerItem.visible);
-          }
-        });
+      displayedLayers () {
+        return this.layers
+          .filter(layer => layer.get('displayInLayerList') !== false && !layer.get('isBaseLayer'))
+          .reverse();
       }
     }
   }
 </script>
-
-<style>
-
-  .wgu-layer-viz-cb {
-    width: 45px;
-  }
-
-</style>

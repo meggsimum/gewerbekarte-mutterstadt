@@ -47,7 +47,10 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [resolve('app'), resolve('src'), resolve('test'), resolve('node_modules/ol')],
+        include: [resolve('app'), resolve('src'), resolve('test'), resolve('node_modules/ol'), resolve('node_modules/canvas-record')],
+        options: {
+          presets: ['@babel/preset-env']
+        }
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,

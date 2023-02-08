@@ -1,12 +1,26 @@
 {
 
-  "title": "Vue.js / OpenLayers WebGIS",
+  "colorTheme": {
+    "dark": false,
+    "themes": {
+      "light": {
+        "primary": "#2E7D32"
+      },
+      "dark": {
+        "secondary": "#A5D6A7"
+      }
+    }
+  },
 
-  "baseColor": "green darken-3",
-
-  "footerTextLeft": "Powered by <a href='https://meggsimum.de/wegue/' target='_blank'>Wegue WebGIS</a>",
-  "footerTextRight": "meggsimum",
   "showCopyrightYear": true,
+
+  "lang": {
+    "supported": {
+      "en": "English",
+      "de": "Deutsch"
+    },
+    "fallback": "en"
+  },
 
   "mapZoom": 2,
   "mapCenter": [0, 0],
@@ -14,19 +28,15 @@
   "mapLayers": [
 
     {
-      "type": "WMS",
+      "type": "TILEWMS",
       "lid": "terrestris-osm-wms",
-      "name": "OSM WMS",
       "format": "image/png",
       "layers": "OSM-WMS",
       "url": "http://ows.terrestris.de/osm-gray/service",
       "transparent": true,
-      "singleTile": false,
       "projection": "EPSG:3857",
-      "attributions": "<a href='https://www.openstreetmap.org/copyright' target='_blank'>© OpenStreetMap-Mitwirkende</a>",
-      "isBaseLayer": false,
-      "visible": true,
-      "displayInLayerList": true
+      "isBaseLayer": true,
+      "visible": true
     }
 
   ],
@@ -34,12 +44,8 @@
   "modules": {
     "wgu-helpwin": {
       "target": "toolbar",
-      "darkLayout": true, 
-      "windowTitle": "About",
-      "textTitle": "About Wegue",
-      "htmlContent": "<b>WebGIS with OpenLayers and Vue.js</b> Template and re-usable components for webmapping applications with OpenLayers and Vue.js",
-      "infoLinkText": "More Info",
-      "infoLinkUrl": "http://wegue.org/"
+      "win": "floating",
+      "icon": "help"
     }
   }
 

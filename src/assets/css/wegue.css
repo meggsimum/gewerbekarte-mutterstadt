@@ -21,18 +21,102 @@ html {
 }
 
 .wgu-app-logo {
-  left: 8px;
-  bottom: 50px;
+  left: 15px;
+  bottom: 45px;
 }
 
-.wgu-measurewin {
+/*
+  Common style for action buttons placed over the map.
+  This is to match the look and feel of the OL buttons to give
+  them a border for better map contrast.
+*/
+.wgu-map-button {
+  position: absolute; 
+  z-index: 2; 
+  padding: 3px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.4) !important;  
+}
+
+.wgu-map-button:hover {
+  background-color: rgba(255,255,255,0.6) !important;
+}
+
+/* 
+  Background layer switcher positioning and styles.
+*/
+.wgu-bglayerswitcher {
+  left: 15px;
+  top: 70px;
+}
+
+/* 
+  Overview map positioning and styles.
+*/
+.wgu-overviewmap {
+  left: 15px;
+  top: calc(50% - 23px);
+}
+
+.wgu-overviewmap-ctrl {
+  position: relative;
+}
+
+.wgu-overviewmap-ctrl,
+.wgu-overviewmap-ctrl.ol-uncollapsible {
+  width: 100%;
+  height: 100%;
+}
+
+.wgu-overviewmap-ctrl .ol-overviewmap-map {
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+.wgu-overviewmap-ctrl .ol-overviewmap-box {
+  border: 2px dotted var(--v-secondary-base);
+}
+
+/* 
+  Temporary fix for buggy scrollbar behavior in Firefox under Linux Mint.
+  Review this in a future vuetify version. 
+*/
+#wgu-overviewmap-wrapper > .v-menu__content 
+{
+	overflow-y: hidden;  
+}
+
+/*
+  TODO Review ccs colorization.
+  Used to force the onprimary color for solo fields (light theme only).
+  Components affected:
+    - wgu-geocoder-combo
+    - wgu-vector-layer-select
+
+  More on material design for solo fields:
+  https://material.io/archive/guidelines/components/text-fields.html#text-fields-field-variations
+*/
+.wgu-solo-field.theme--light > .v-input__control fieldset,
+.wgu-solo-field.theme--light > .v-input__control .v-icon, 
+.wgu-solo-field.theme--light > .v-input__control .v-label,
+.wgu-solo-field.theme--light > .v-input__control input,
+.wgu-solo-field.theme--light > .v-input__control .v-select__selection
+{
+  color: var(--v-onprimary-base) !important;
+}
+
+/* TODO 
+  Generalize the positioning concept for windows,
+  this interferes with positioning and draggable settings in the app.conf */
+.wgu-measurewin.wgu-floating {
   left: auto !important;
   top: auto !important;
   right: 10px;
   bottom: 4.8em;
 }
 
-.wgu-layerlist {
+.wgu-layerlist.wgu-floating {
   left: auto !important;
   top: 75px !important;
   right: 10px;
@@ -48,6 +132,11 @@ html {
   color: inherit;
 }
 
+.wgu-module-card.wgu-floating {
+  position: absolute;
+  z-index: 2;
+} 
+
 .wgu-win-title {
    -moz-user-select: none;
    -khtml-user-select: none;
@@ -55,4 +144,34 @@ html {
    /* Introduced in IE 10, See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/ */
    -ms-user-select: none;
    user-select: none;
+}
+
+.wgu-app-sidebar {
+  overflow: visible
+}
+
+.wgu-app-sidebar-toggle-btn {
+  left: 100%; 
+  visibility: visible;
+  width: 20px;
+  min-width: 20px !important;
+  height: 45px !important;
+  border-radius: 0px 4px 4px 0px;
+}
+
+.wgu-app-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 5px;
+  cursor: ew-resize;
+  z-index: 10000;
+}
+
+/* Temporary fix for buggy word-breaking in vuetify card texts and titles.
+  This will go away in a future vuetify version - 
+  see https://github.com/vuetifyjs/vuetify/issues/9130 */
+.v-card__text, .v-card__title {
+  word-break: normal;
 }
