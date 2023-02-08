@@ -9,7 +9,7 @@
   "wgu-helpwin": {
     "title": "Info",
     "textTitle": "Gewerbe in Mutterstadt",
-    "htmlContent": "Diese Anwendung stellt die auf der Webseite von <a href=\"http://www.mutterstadt.de/gv_mutterstadt/Wirtschaft/\">Mutterstadt</a> aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf ein Gewerbesymbol wird eine Beschreibung eingeblendet. <br><br>Es handelt sich <b>nicht</b> um eine offizielle Anwendung der Gemeinde Mutterstadt.<br><br>Es besteht keine Gewähr für Korrektheit oder Vollständigkeit.<br><br>Bei Fragen oder Anregungen kontaktieren Sie uns <a href=\"mailto:info@meggsimum.de?subject=Gewerbekarte Mutterstadt\">per Mail</a>.",
+    "htmlContent": "Diese Anwendung stellt die auf der Webseite von <a href=\"https://www.mutterstadt.de/\">Mutterstadt</a> aufgeführten Gewerbe auf einer interaktiven Landkarte dar. Durch das Klicken auf ein Gewerbesymbol wird eine Beschreibung eingeblendet. <br><br>Es handelt sich <b>nicht</b> um eine offizielle Anwendung der Gemeinde Mutterstadt.<br><br>Es besteht keine Gewähr für Korrektheit oder Vollständigkeit.<br><br>Bei Fragen oder Anregungen kontaktieren Sie uns <a href=\"mailto:info@meggsimum.de?subject=Gewerbekarte Mutterstadt\">per Mail</a>.",
     "infoLinkUrl": "https://meggsimum.de/",
     "infoLinkText": "meggsimum"
   }
